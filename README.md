@@ -6,6 +6,7 @@ This should vastly increase development speed and production resource usage thro
 * Centralized access to [OpenEdge™](openedge)/[RAW](raw)
 * Caching of procedures using in-memory storage via [Redis](redis)
 * Logging to the EK-stack
+  * [Serilog](https://serilog.net/) with an [Elasticsearch Sink](https://github.com/serilog/serilog-sinks-elasticsearch)
 * Crossplatform access through [SignalR](signalr)
 
 ## Technologies
@@ -18,33 +19,65 @@ This should vastly increase development speed and production resource usage thro
 * [Redis](redis) - Efficient caching for procedure responses
 * [Windows Server Core](https://hub.docker.com/_/microsoft-windows-servercore) on [Docker](https://www.docker.com/)
 
-## Input structure
-The following structure is expressed in JSON, though through RPC this will be sent in the MessagePack format using our libraries.
+## Connection requests
+After the connection is initialized, the client will need to state the microservice it's representing. The server will then communicate back the connection details
 ```jsonc
+/*
+  Request
+*/
 {
-  "proc": "{{Procedure Name}}", // Name of the procedure to be called in OpenEdge
-  "parm": [ // Parameters to provide with the procedure
-    { "pos": 1, "value": "{{Value}}" },
-    { "pos": 2, "value": "{{Value}}" },
-    { "pos": 3, "out": true } // "out": Optional parameter, specifies the output field. No value is required
-  ],
-  "cache": 0 // Time the procedure should be cached if not cached already, 0 bypasses caching
+  "applicationId": "{{Microservice App Name}}",
+  // Allow test access, all access will be blocked unless it is explicitly allowed here first
+  "test": true
+}
+
+/*
+  Response
+*/
+
+{
+  // Connection identfier, purely for structured logging on the client.
+  "connectionId": "{{ConnectionId}}"
 }
 ```
 
-## Output structure
+
+## Procedure requests
+### Input structure
 The following structure is expressed in JSON, though through RPC this will be sent in the MessagePack format using our libraries.
 ```jsonc
 {
-  "proc": "{{Procedure Name}}", // Name of the procedure that was called in OpenEdge
-  "status": 0, // Response statuscode, TBD: Whether or not this is required is to be verified when researching SignalR.
-  "result": { // null if none
-    "3": { // "3" is the output position entered in the input
-      "type": "{{Value Type}}",
-      "value": "{{Any Type: Result}}"
-    }
+  // Name of the procedure to be called in OpenEdge
+  "proc": "{{Procedure Name}}",
+  // Parameters to provide with the procedure
+  "parm": [
+    { "pos": 1, "value": "{{Value}}" },
+     // "redact": Redact the input value from any logging.
+    { "pos": 2, "value": "{{Value}}", "redact": true },
+    // "out": Optional parameter, specifies the output field. No value is required
+    { "pos": 3, "out": true }
+  ],
+  // Time the procedure should be cached if not cached already, 0 bypasses caching
+  // Always bypass caching for confidential information
+  "cache": 0
+}
+```
+
+### Output structure
+The following structure is expressed in JSON, though through RPC this will be sent in the MessagePack format using our libraries.
+```jsonc
+{
+  // Name of the procedure that was called in OpenEdge
+  "proc": "{{Procedure Name}}",
+  // Response statuscode, TBD: Whether or not this is required is to be verified when researching SignalR.
+  "status": 0,
+  // null if none/at failure
+  "result": {
+    // The response will always be a binary array
+    "3": "{{Result}}"
   },
-  "cache": 0 // Time the provided result is still being cached.
+  // Age of the content, -1 if newly requested/not cached
+  "age": -1
 }
 ```
 
@@ -53,3 +86,39 @@ The following structure is expressed in JSON, though through RPC this will be se
 [raw]: (https://www.realdolmen.com/en/solution/raw)
 [redis]: (https://redis.io/)
 [signalr]: (https://en.wikipedia.org/wiki/SignalR)
+
+## Logging formats
+A couple of formats will be specified for structured logging.
+The provided forats are subject to additional fields but should at least contain their respective following fields
+
+### New Connections
+| Field 	| Type 	| Description 	|
+|-------	|------	|-------------	|
+| ConnectionId | text | Connection identifier for a specific RPC client connection and request |
+| IP | ip | IP Address off the connecting application |
+| AppId | text | Application identifier used to authorize the application |
+
+
+### Procedure execution
+| Field 	| Type 	| Description 	|
+|-------	|------	|-------------	|
+| Procedure | text | The procedure name executed in the context  |
+| ConnectionId | text | Connection identifier for a specific RPC client connection and request |
+| Inputs | text | JSON representation of the input parameters **Warning: The inputs specified as redacted should be filtered out at all times!** |
+| Date | date | Time the procedure was executed |
+
+### Procedure completion
+| Field 	| Type 	| Description 	|
+|-------	|------	|-------------	|
+| Procedure | text | The procedure name executed in the context  |
+| ConnectionId | text | Connection identifier for a specific RPC client connection and request |
+| Date | date | Time the procedure was completed |
+| ElapsedTime | long | Time in milliseconds that elapsed between execution and completion |
+
+### Procedure failure
+
+| Field 	| Type 	| Description 	|
+|-------	|------	|-------------	|
+| Procedure | text | The procedure name executed in the context  |
+| ConnectionId | text | Connection identifier for a specific RPC client connection and request |
+| Exception | exception | The generic Serilog exception fields containing the error details provided by .NET |
