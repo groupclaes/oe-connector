@@ -26,7 +26,7 @@ After the connection is initialized, the client will need to state the microserv
   Request
 */
 {
-  "applicationId": "{{Microservice App Name}}",
+  "application": "{{Microservice App Name}}",
   // Allow test access, all access will be blocked unless it is explicitly allowed here first
   "test": true
 }
@@ -34,7 +34,6 @@ After the connection is initialized, the client will need to state the microserv
 /*
   Response
 */
-
 {
   // Connection identfier, purely for structured logging on the client.
   "connectionId": "{{ConnectionId}}"
@@ -57,7 +56,7 @@ The following structure is expressed in JSON, though through RPC this will be se
     // "out": Optional parameter, specifies the output field. No value is required
     { "pos": 3, "out": true }
   ],
-  // Time the procedure should be cached if not cached already, 0 bypasses caching
+  // Time in milliseconds the procedure should be cached if not cached already, 0 bypasses caching
   // Always bypass caching for confidential information
   "cache": 0
 }
@@ -103,7 +102,8 @@ The provided forats are subject to additional fields but should at least contain
 | Field 	| Type 	| Description 	|
 |-------	|------	|-------------	|
 | Procedure | text | The procedure name executed in the context  |
-| ConnectionId | text | Connection identifier for a specific RPC client connection and request |
+| ConnectionId | text | Connection identifier for a specific RPC client connection |
+| RequestId | long | Request identifier identifying a specific task/request, most likely a procedure execution |
 | Inputs | text | JSON representation of the input parameters **Warning: The inputs specified as redacted should be filtered out at all times!** |
 | Date | date | Time the procedure was executed |
 
@@ -111,7 +111,8 @@ The provided forats are subject to additional fields but should at least contain
 | Field 	| Type 	| Description 	|
 |-------	|------	|-------------	|
 | Procedure | text | The procedure name executed in the context  |
-| ConnectionId | text | Connection identifier for a specific RPC client connection and request |
+| ConnectionId | text | Connection identifier for a specific RPC client connection |
+| RequestId | long | Request identifier identifying a specific task/request, most likely a procedure execution |
 | Date | date | Time the procedure was completed |
 | ElapsedTime | long | Time in milliseconds that elapsed between execution and completion |
 
@@ -120,5 +121,6 @@ The provided forats are subject to additional fields but should at least contain
 | Field 	| Type 	| Description 	|
 |-------	|------	|-------------	|
 | Procedure | text | The procedure name executed in the context  |
-| ConnectionId | text | Connection identifier for a specific RPC client connection and request |
+| ConnectionId | text | Connection identifier for a specific RPC client connection |
+| RequestId | long | Request identifier identifying a specific task/request, most likely a procedure execution |
 | Exception | exception | The generic Serilog exception fields containing the error details provided by .NET |
