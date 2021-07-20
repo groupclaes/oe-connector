@@ -77,7 +77,9 @@ The following structure is expressed in JSON, though through RPC this will be se
     "3": "{{Result}}"
   },
   // Age of the content, -1 if newly requested/not cached
-  "age": -1
+  "age": -1,
+  // Time taken to execute procedure and get result (ms)
+  "elapsedTime": 135
 }
 ```
 
@@ -112,7 +114,7 @@ The provided forats are subject to additional fields but should at least contain
 |-------	|------	|-------------	|
 | Procedure | text | The procedure name executed in the context  |
 | ConnectionId | text | Connection identifier for a specific RPC client connection and request |
-| Date | date | Time the procedure was completed |
+| Age | long | Age in seconds of the procedure response |
 | ElapsedTime | long | Time in milliseconds that elapsed between execution and completion |
 
 ### Procedure failure
