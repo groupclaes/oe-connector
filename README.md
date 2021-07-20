@@ -76,7 +76,9 @@ The following structure is expressed in JSON, though through RPC this will be se
     "3": "{{Result}}"
   },
   // Age of the content, -1 if newly requested/not cached
-  "age": -1
+  "age": -1,
+  // Time taken to execute procedure and get result (ms)
+  "elapsedTime": 135
 }
 ```
 
