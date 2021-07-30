@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace GroupClaes.OpenEdge.Connector.Shared
@@ -17,16 +18,15 @@ namespace GroupClaes.OpenEdge.Connector.Shared
     /// <summary>
     /// Resulting responses by OpenEdge with the index as key
     /// </summary>
-    public Dictionary<int, object> Result { get; set; }
+    public Dictionary<int, byte[]> Result { get; set; }
     /// <summary>
-    /// The age of the cached content
+    /// The timestamp of the retrieved result
     /// </summary>
-    /// <remark>-1 means it hasn't been cached</remark>
-    public int Age { get; set; }
+    public DateTime? Retrieved { get; set; }
     /// <summary>
     /// Time taken to execute and receive the procedure response
     /// </summary>
     /// <remark>If cached, the original elapsed time will still be shown</remark>
-    public long ElapsedTime { get; set; }
+    public long FetchTime { get; set; }
   }
 }

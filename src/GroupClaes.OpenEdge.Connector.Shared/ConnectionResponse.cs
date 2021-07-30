@@ -5,7 +5,6 @@ namespace GroupClaes.OpenEdge.Connector.Shared
     /// <summary>
     /// Connection identifier
     /// </summary>
-    /// <value></value>
     public string ConnectionId { get; set; }
   }
 }

@@ -485,4 +485,4 @@ MigrationBackup/
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore,vs
 
 
-.DS_Store/
+.DS_Store

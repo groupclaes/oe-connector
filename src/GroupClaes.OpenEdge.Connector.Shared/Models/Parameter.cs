@@ -31,5 +31,14 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
         Position = position,
         Output = true
       };
+    
+    public Parameter RedactCopy()
+      => new Parameter
+      {
+        Position = this.Position,
+        Output = this.Output,
+        Value = "***",
+        Redact = true
+      };
   }
 }
