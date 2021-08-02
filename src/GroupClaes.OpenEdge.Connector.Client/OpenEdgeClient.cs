@@ -15,12 +15,15 @@ namespace GroupClaes.OpenEdge.Connector.Client
 {
   public class OpenEdgeClient : IOpenEdgeClient
   {
+    public string ConnectionId { get => connection.ConnectionId; }
+
     private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private readonly ILogger<OpenEdgeClient> logger;
     private readonly HubConnection connection;
-
     private readonly ConcurrentDictionary<string, List<Action<ProcedureResponse>>> responseHandlers;
     private readonly List<Action<ProcedureResponse>> genericHandlers;
+
+    private bool isDisposing = false;
 
     public OpenEdgeClient(ILogger<OpenEdgeClient> logger, IConfiguration configuration)
     {

@@ -8,4 +8,5 @@
 Match criteria: 
 * Cache time: 0 or -1 means not subscribing to a group, send individually (with cache override)
 * Parameters -> Inputs, check values
-  * Considering procedures never change, the inputs and outputs should always be the same?
+  * Considering procedures never change,  outputs should always be the same.
+  

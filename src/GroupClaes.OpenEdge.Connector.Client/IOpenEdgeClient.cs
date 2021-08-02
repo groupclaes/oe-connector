@@ -9,6 +9,11 @@ namespace GroupClaes.OpenEdge.Connector.Client
   public interface IOpenEdgeClient
   {
     /// <summary>
+    /// The current client connection identifier
+    /// </summary>
+    string ConnectionId { get; }
+
+    /// <summary>
     /// Authenticate against the open edge connector
     /// </summary>
     /// <param name="application">Microservice application identifier</param>

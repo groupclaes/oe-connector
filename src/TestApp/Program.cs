@@ -13,6 +13,8 @@ namespace TestApp
 {
   class Program
   {
+    private static IServiceProvider serviceProvider;
+    
     static async Task Main(string[] args)
     {
       IConfiguration configuration = new ConfigurationBuilder()
@@ -22,12 +24,19 @@ namespace TestApp
         })
         .Build();
 
-      IServiceProvider serviceProvider = new ServiceCollection()
+      serviceProvider = new ServiceCollection()
         .AddLogging()
-        .AddScoped<IOpenEdgeClient, OpenEdgeClient>()
+        .AddTransient<IOpenEdgeClient, OpenEdgeClient>()
         .AddSingleton<IConfiguration>(configuration)
         .BuildServiceProvider();
 
+      await DoTests();
+
+      Console.ReadLine();
+    }
+
+    private static async Task DoTests()
+    {
       List<Parameter> parameters = new List<Parameter>
       {
         new Parameter
@@ -42,14 +51,13 @@ namespace TestApp
         }
       };
 
-
       List<TimeSpan> results = new List<TimeSpan>();
       List<IOpenEdgeClient> clients = new List<IOpenEdgeClient>();
       for (int j = 0; j < 16; j++)
       {
         IOpenEdgeClient openEdge = serviceProvider.GetRequiredService<IOpenEdgeClient>();
 
-        // Preconnect hek
+        // Authorize and let the service know our intentionts
         await openEdge.Authenticate("TestApp69", true);
 
         for (int i = 0; i < 300; i++)
@@ -60,7 +68,7 @@ namespace TestApp
           
           action = x => {
             stopWatch.Stop();
-            Console.WriteLine("Procedure {0}, {1}, {2}, Elapsed: {3}", x.Procedure, x.Retrieved, x.Status, stopWatch.Elapsed);
+            Console.WriteLine("Procedure #1 {0}, {1}, {2}, {3}, Elapsed: {4}", x.Procedure, x.Retrieved, x.Status, openEdge.ConnectionId, stopWatch.Elapsed);
             results.Add(stopWatch.Elapsed);
 
             openEdge.UnregisterResponseHandler("test" + i, action);
@@ -71,27 +79,34 @@ namespace TestApp
         clients.Add(openEdge);
       }
 
-      for (int i = 0; i < 300; i++)
+      for (int j = 0; j < 16; j++)
       {
-        _ = clients[0].ExecuteProcedure("test" + i, 100, parameters)
-          .ConfigureAwait(false);
-        Console.WriteLine("Procedure test {0} sent!", i);
+        for (int i = 0; i < 300; i++)
+        {
+          _ = clients[j].ExecuteProcedure("test" + i, 100, parameters)
+            .ConfigureAwait(false);
+          Console.WriteLine("Procedure test {0} sent!", i);
+        }
       }
 
-      for (int i = 0; i < 300; i++)
-      {
-        Stopwatch stopWatch = new Stopwatch();
-        stopWatch.Start();
-        _ = clients[0].GetProcedure("test_" + i, 500, parameters)
-          .ContinueWith(x => {
-            stopWatch.Stop();
-            ProcedureResponse response = x.Result;
-            Console.WriteLine("Procedure {0}, {1}, {2}, Elapsed: {3}", response.Procedure, response.Retrieved, response.Status, stopWatch.Elapsed);
-          });
-        Console.WriteLine("Procedure test {0} sent!", i);
-      }
+      // for (int i = 0; i < 300; i++)
+      // {
+      //   Stopwatch stopWatch = new Stopwatch();
+      //   stopWatch.Start();
+      //   _ = clients[0].GetProcedure("test" + i, 500, parameters)
+      //     .ContinueWith(x => {
+      //       stopWatch.Stop();
+      //       ProcedureResponse response = x.Result;
+      //       Console.WriteLine("Procedure #2 {0}, {1}, {2}, {3}, Elapsed: {4}", response.Procedure, response.Retrieved, response.Status, clients[0].ConnectionId, stopWatch.Elapsed);
+      //     });
+      //   Console.WriteLine("Procedure test {0} sent!", i);
+      // }
 
-      Console.ReadLine();
+      
+      foreach (var client in clients)
+      {
+        Console.WriteLine("Client ID: {0}", client.ConnectionId);
+      }
     }
   }
 }

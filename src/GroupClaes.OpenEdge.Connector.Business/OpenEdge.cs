@@ -168,7 +168,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       }
     }
 
-    private async Task<ProcedureResponse> GetProcedureResponse(ProcedureRequest request, CancellationToken cancellationToken)
+    private Task<ProcedureResponse> GetProcedureResponse(ProcedureRequest request, CancellationToken cancellationToken)
     {
       Stopwatch stopwatch = new Stopwatch();
       stopwatch.Start();
@@ -198,7 +198,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
         FetchTime = stopwatch.ElapsedMilliseconds
       };
 
-      return response;
+      return Task.FromResult(response);
     }
 
     /// <summary>

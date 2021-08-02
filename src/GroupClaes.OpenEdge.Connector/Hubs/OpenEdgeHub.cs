@@ -1,6 +1,9 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Text;
 using System.Threading.Tasks;
 using GroupClaes.OpenEdge.Connector.Business;
+using GroupClaes.OpenEdge.Connector.Models;
 using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -15,12 +18,15 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
     private readonly ILogger<OpenEdgeHub> logger;
     private readonly IOpenEdge openEdge;
 
+    private readonly ConcurrentDictionary<string, ProcedureGroup> procedureTimers;
+
     private bool IsTesting { get => (bool)Context.Items[IsTest]; }
 
     public OpenEdgeHub(ILogger<OpenEdgeHub> logger, IOpenEdge openEdge)
     {
       this.logger = logger;
       this.openEdge = openEdge;
+      this.procedureTimers = new ConcurrentDictionary<string, ProcedureGroup>();
     }
 
     public Task Authenticate(ConnectionRequest request)
@@ -41,8 +47,10 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
 
       if (!hasRedacted && request.Cache > 0)
       {
-        await Groups.AddToGroupAsync(Context.ConnectionId, GetProcedureName(request.Procedure), Context.ConnectionAborted)
-          .ConfigureAwait(false);
+        ProcedureGroup group = GetProcedureGroup(request.Procedure, parameterHash);
+        group.Initialize();
+        group.AddRecipient(Context.ConnectionId);
+
         // Nothing is redacted meaning nothing is confidential/personal so we can cache the data and send it to all recipients
         await ExecuteAndSendToGroup(request, parameterHash)
           .ConfigureAwait(false);
@@ -60,10 +68,9 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
       
       // Get procedure response.
       // If has none redacted and has a cache, send to all current subscribers/awaiting people
-
       ProcedureResponse response = await openEdge.GetProcedureAsync(request, parameterHash, IsTesting, Context.ConnectionAborted)
         .ConfigureAwait(false);
-      // Nothing is redacted meaning nothing is confidential/personal so we can cache the data and send it to all recipients
+
       return response;
     }
 
@@ -73,8 +80,13 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
         .ConfigureAwait(false);
 
       logger.LogDebug("Received procedure {Procedure} response {BytesLength}", request.Procedure, response.Length);
-      await GetProcedureGroup(request.Procedure).SendAsync("ProcedureResponse", response)
+      
+      ProcedureGroup group = GetProcedureGroup(request.Procedure, parameterHash);
+      logger.LogDebug("Sending procedure {Procedure} response to {@Recipients}", request.Procedure, group.Recipients);
+      await Clients.Clients(group.Recipients).SendAsync("ProcedureResponse", response)
         .ConfigureAwait(false);
+      logger.LogInformation("Sent response for {Procedure} to {@Recipients}, total time taken: {TimeTaken}", request.Procedure, group.Recipients, group.Stopwatch.Elapsed);
+
     }
 
     private async Task ExecuteAndSendToClient(ProcedureRequest request, string parameterHash)
@@ -86,15 +98,7 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
         .ConfigureAwait(false);
     }
 
-    private IClientProxy GetProcedureGroup(string procedure)
-      => Clients.Group(GetProcedureName(procedure));
-
-    /// <summary>
-    /// Get a procedure name 
-    /// </summary>
-    /// <param name="procedure"></param>
-    /// <returns></returns>
-    private string GetProcedureName(string procedure)
-      => IsTesting ? $"procedure_test_{procedure}" : $"procedure_{procedure}";
+    private ProcedureGroup GetProcedureGroup(string procedure, string parameterHash)
+      => this.procedureTimers.GetOrAdd($"{parameterHash}{procedure}{IsTesting}", proc => new ProcedureGroup(proc));
   }
 }
