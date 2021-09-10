@@ -22,11 +22,9 @@ namespace GroupClaes.OpenEdge.Connector
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddStackExchangeRedisCache(options =>
-      {
-        options.Configuration = Configuration["Redis:ConnectionString"];
-      });
+        options.Configuration = Configuration["Redis:ConnectionString"]);
 
-      services.AddScoped<IOpenEdge, GroupClaes.OpenEdge.Connector.Business.OpenEdge>();
+      services.AddOpenEdge();
 
       services.AddControllers();
       services.AddSignalR()

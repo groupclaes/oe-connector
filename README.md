@@ -75,10 +75,10 @@ The following structure is expressed in JSON, though through RPC this will be se
     // The response will always be a binary array
     "3": "{{Result}}"
   },
-  // Age of the content, -1 if newly requested/not cached
-  "retrieved": -1,
+  // Content age timestamp, null if newly requested/not cached
+  "lastMod": -1,
   // Time taken to execute procedure and get result (ms)
-  "fetchTime": 135
+  "origTime": 135
 }
 ```
 

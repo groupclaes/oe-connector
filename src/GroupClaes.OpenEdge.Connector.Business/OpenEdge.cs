@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-#if DEBUG
 using System.Diagnostics;
-#endif
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -18,7 +16,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
   public class OpenEdge : IOpenEdge
   {
     private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
     private static readonly Random random = new Random();
     private const string CachePathPrefix = "OpenEdge:Procedures:";
 
@@ -37,7 +34,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       Stopwatch stopwatch = new Stopwatch();
       stopwatch.Start();
 #endif
-      byte[] rawData;
+      byte[] rawData = null;
       string cacheName = $"{CachePathPrefix}{request.Procedure}";
       if (!string.IsNullOrEmpty(parameterHash))
       {
@@ -47,14 +44,20 @@ namespace GroupClaes.OpenEdge.Connector.Business
       if (request.Cache < 1)
       {
         logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
-        return await GetProcedureResponseBytes(await GetProcedureResponse(request, cancellationToken).ConfigureAwait(false))
-          .ConfigureAwait(false);
+        return GetProcedureResponseBytes(await GetProcedureResponse(request, cancellationToken).ConfigureAwait(false));
       }
       else
       {
         logger.LogDebug("Attempting to fetch cached response for {Procedure}", request.Procedure);
-        rawData = await cache.GetAsync(cacheName, cancellationToken)
+        try
+        {
+          rawData = await cache.GetAsync(cacheName, cancellationToken)
             .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (!(ex is OperationCanceledException))
+        {
+          logger.LogError(ex, "Couldn't fetch cached response for {Procedure}", request.Procedure);
+        }
 
         if (rawData != null)
         {
@@ -76,9 +79,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
           {
             logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
 
-            result.Retrieved = DateTime.UtcNow;
-            rawData = await GetProcedureResponseBytes(result)
-              .ConfigureAwait(false);
+            result.LastModified = DateTime.UtcNow;
+            rawData = GetProcedureResponseBytes(result);
 
             _ = cache.SetAsync(cacheName, rawData,
               new DistributedCacheEntryOptions {
@@ -87,8 +89,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           }
           else
           {
-            rawData = await GetProcedureResponseBytes(result)
-              .ConfigureAwait(false);
+            rawData = GetProcedureResponseBytes(result);
           }
 
           logger.LogInformation("Cache result {Found} for {Procedure}", "MISS", request.Procedure);
@@ -100,8 +101,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
         }
       }
     }
-
-
     public async Task<ProcedureResponse> GetProcedureAsync(ProcedureRequest request, string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
     {
 #if DEBUG
@@ -134,8 +133,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           stopwatch.Stop();
           logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
 #endif
-          return await GetProcedureFromBytes(rawData)
-            .ConfigureAwait(false);
+          return GetProcedureFromBytes(rawData);
         }
         else
         {
@@ -148,9 +146,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
           {
             logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
 
-            result.Retrieved = DateTime.UtcNow;
-            rawData = await GetProcedureResponseBytes(result)
-              .ConfigureAwait(false);
+            result.LastModified = DateTime.UtcNow;
+            rawData = GetProcedureResponseBytes(result);
 
             _ = cache.SetAsync(cacheName, rawData,
               new DistributedCacheEntryOptions {
@@ -173,9 +170,11 @@ namespace GroupClaes.OpenEdge.Connector.Business
       Stopwatch stopwatch = new Stopwatch();
       stopwatch.Start();
 
+      cancellationToken.ThrowIfCancellationRequested();
+
       Dictionary<int, byte[]> outputsDictionary = new Dictionary<int, byte[]>();
-      byte[] bytes;
       /*  //DEV IMPLEMENTATION */
+      byte[] bytes;
       foreach (Parameter output in request.Parameters.Where(x => x.Output))
       {
         bytes = new byte[random.Next(1000, 65535)];
@@ -195,7 +194,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       {
         Procedure = request.Procedure,
         Result = outputsDictionary,
-        FetchTime = stopwatch.ElapsedMilliseconds
+        OriginTime = stopwatch.ElapsedMilliseconds
       };
 
       return Task.FromResult(response);
@@ -240,10 +239,10 @@ namespace GroupClaes.OpenEdge.Connector.Business
       return hasRedacted;
     }
 
-    private Task<byte[]> GetProcedureResponseBytes(ProcedureResponse response)
-      => Task.Run(() => System.Text.Json.JsonSerializer.SerializeToUtf8Bytes<ProcedureResponse>(response, serializerOptions));
+    private byte[] GetProcedureResponseBytes(ProcedureResponse response)
+      => JsonSerializer.SerializeToUtf8Bytes<ProcedureResponse>(response, serializerOptions);
 
-    private Task<ProcedureResponse> GetProcedureFromBytes(byte[] bytes)
-      => Task.Run(() => System.Text.Json.JsonSerializer.Deserialize<ProcedureResponse>(bytes, serializerOptions));
+    private ProcedureResponse GetProcedureFromBytes(byte[] bytes)
+      => JsonSerializer.Deserialize<ProcedureResponse>(bytes, serializerOptions);
   }
 }

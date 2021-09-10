@@ -23,8 +23,6 @@ namespace GroupClaes.OpenEdge.Connector.Client
     private readonly ConcurrentDictionary<string, List<Action<ProcedureResponse>>> responseHandlers;
     private readonly List<Action<ProcedureResponse>> genericHandlers;
 
-    private bool isDisposing = false;
-
     public OpenEdgeClient(ILogger<OpenEdgeClient> logger, IConfiguration configuration)
     {
       this.logger = logger;
@@ -32,7 +30,7 @@ namespace GroupClaes.OpenEdge.Connector.Client
         .WithUrl(configuration["OpenEdge:Endpoint"])
         .WithAutomaticReconnect()
         .AddMessagePackProtocol()
-        .ConfigureLogging(x => x.AddJsonConsole())
+        // .ConfigureLogging(x => x.AddConsole())
         .Build();
       responseHandlers = new ConcurrentDictionary<string, List<Action<ProcedureResponse>>>();
       genericHandlers = new List<Action<ProcedureResponse>>();

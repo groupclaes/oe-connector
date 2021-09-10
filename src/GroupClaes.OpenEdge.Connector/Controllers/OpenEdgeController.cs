@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 #if DEBUG
 using System.Diagnostics;
 #endif
-using System.Linq;
 using System.Threading.Tasks;
 using GroupClaes.OpenEdge.Connector.Business;
 using GroupClaes.OpenEdge.Connector.Shared;

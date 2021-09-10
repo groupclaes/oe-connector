@@ -22,11 +22,13 @@ namespace GroupClaes.OpenEdge.Connector.Shared
     /// <summary>
     /// The timestamp of the retrieved result
     /// </summary>
-    public DateTime? Retrieved { get; set; }
+    [JsonPropertyName("lastMod")]
+    public DateTime? LastModified { get; set; }
     /// <summary>
     /// Time taken to execute and receive the procedure response
     /// </summary>
     /// <remark>If cached, the original elapsed time will still be shown</remark>
-    public long FetchTime { get; set; }
+    [JsonPropertyName("origTime")]
+    public long OriginTime { get; set; }
   }
 }

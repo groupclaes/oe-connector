@@ -19,7 +19,6 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
     private readonly IOpenEdge openEdge;
 
     private readonly ConcurrentDictionary<string, ProcedureGroup> procedureTimers;
-
     private bool IsTesting { get => (bool)Context.Items[IsTest]; }
 
     public OpenEdgeHub(ILogger<OpenEdgeHub> logger, IOpenEdge openEdge)
@@ -29,14 +28,12 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
       this.procedureTimers = new ConcurrentDictionary<string, ProcedureGroup>();
     }
 
-    public Task Authenticate(ConnectionRequest request)
+    public void Authenticate(ConnectionRequest request)
     {
       logger.LogInformation("Connection request received for {Connection} identifying as microservice {Application} using test {Test}",
         Context.ConnectionId, request.Application, request.Test);
 
       Context.Items[IsTest] = request.Test;
-
-      return Task.CompletedTask;
     }
 
     public async Task ExecuteProcedure(ProcedureRequest request)
@@ -86,7 +83,6 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
       await Clients.Clients(group.Recipients).SendAsync("ProcedureResponse", response)
         .ConfigureAwait(false);
       logger.LogInformation("Sent response for {Procedure} to {@Recipients}, total time taken: {TimeTaken}", request.Procedure, group.Recipients, group.Stopwatch.Elapsed);
-
     }
 
     private async Task ExecuteAndSendToClient(ProcedureRequest request, string parameterHash)
