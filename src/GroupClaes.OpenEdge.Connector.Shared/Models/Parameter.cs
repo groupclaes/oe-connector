@@ -15,6 +15,14 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     /// </summary>
     public object Value { get; set; }
     /// <summary>
+    /// Specify the type of value(s) provided
+    /// </summary>
+    public ParameterType Type { get; set; }
+    /// <summary>
+    /// Specify if value is an array
+    /// </summary>
+    public bool Multiple { get; set; }
+    /// <summary>
     /// Should redact the contents from any logging
     /// </summary>
     public bool Redact { get; set; }
