@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace GroupClaes.OpenEdge.Connector.Shared.Models
+﻿namespace GroupClaes.OpenEdge.Connector.Shared.Models
 {
   public enum ParameterType : int
   {
@@ -28,5 +24,9 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     DynDataSet = 37,
     DateTime = 34,
     DateTimeTZ = 40,
+
+    /* Custom types to be parsed internally */
+    JSON = 15001,
+    File = MemPointer
   }
 }

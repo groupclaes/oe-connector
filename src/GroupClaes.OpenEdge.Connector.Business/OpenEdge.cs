@@ -6,26 +6,30 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using GroupClaes.OpenEdge.Connector.Business.Raw;
 using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Progress.Open4GL.DynamicAPI;
+using RAW;
 
 namespace GroupClaes.OpenEdge.Connector.Business
 {
   public class OpenEdge : IOpenEdge
   {
     private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-    private static readonly Random random = new Random();
     private const string CachePathPrefix = "OpenEdge:Procedures:";
 
     private readonly IDistributedCache cache;
     private readonly ILogger<OpenEdge> logger;
+    private readonly IProxyInterface proxyInterface;
 
-    public OpenEdge(IDistributedCache cache, ILogger<OpenEdge> logger)
+    public OpenEdge(IDistributedCache cache, ILogger<OpenEdge> logger, IProxyInterface proxyInterface)
     {
       this.cache = cache;
       this.logger = logger;
+      this.proxyInterface = proxyInterface;
     }
 
     public async Task<byte[]> ExecuteProcedureAsync(ProcedureRequest request, string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
@@ -167,37 +171,44 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
     private Task<ProcedureResponse> GetProcedureResponse(ProcedureRequest request, CancellationToken cancellationToken)
     {
-      Stopwatch stopwatch = new Stopwatch();
-      stopwatch.Start();
-
-      cancellationToken.ThrowIfCancellationRequested();
-
-      Dictionary<int, byte[]> outputsDictionary = new Dictionary<int, byte[]>();
-      /*  //DEV IMPLEMENTATION */
-      byte[] bytes;
-      foreach (Parameter output in request.Parameters.Where(x => x.Output))
+      return Task.Run(() =>
       {
-        bytes = new byte[random.Next(1000, 65535)];
-        random.NextBytes(bytes);
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
 
-        outputsDictionary.Add(output.Position, bytes);
-      }
-      // await Task.Delay(random.Next(1000), cancellationToken)
-      //   .ConfigureAwait(false);
+        ParameterSet parameters = GenerateParameterSet(request.Parameters);
 
-      /* DEV IMPLEMENTATION// */
+        cancellationToken.ThrowIfCancellationRequested();
 
-      stopwatch.Stop();
-      logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}", request.Procedure, stopwatch.ElapsedMilliseconds);
+        proxyInterface.RunProcedure(request.Procedure, parameters);
+        cancellationToken.ThrowIfCancellationRequested();
+        Dictionary<int, object> outputsDictionary = GetOutputParameters(request.Parameters, parameters);
 
-      ProcedureResponse response = new ProcedureResponse
-      {
-        Procedure = request.Procedure,
-        Result = outputsDictionary,
-        OriginTime = stopwatch.ElapsedMilliseconds
-      };
+        stopwatch.Stop();
+        logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}", request.Procedure, stopwatch.ElapsedMilliseconds);
 
-      return Task.FromResult(response);
+        if (outputsDictionary.All(x => x.Value != null))
+        {
+          return new ProcedureResponse()
+          {
+            Status = 200,
+            Procedure = request.Procedure,
+            Result = outputsDictionary,
+            OriginTime = stopwatch.ElapsedMilliseconds
+          };
+        }
+        else
+        {
+          logger.LogWarning("Executed {Procedure} but received one or more null fields.", request.Procedure);
+          return new ProcedureResponse()
+          {
+            Status = 500,
+            Procedure = request.Procedure,
+            Result = null,
+            OriginTime = stopwatch.ElapsedMilliseconds
+          };
+        }
+      }, cancellationToken);
     }
 
     /// <summary>
@@ -234,15 +245,85 @@ namespace GroupClaes.OpenEdge.Connector.Business
         displayeableFilters[i] = request.Parameters[i];
       };
 
-      parameterHash = hashBuilder.Length > 0 ? Checksum.Generate(hashBuilder) : String.Empty;
+      parameterHash = hashBuilder.Length > 0 ? Checksum.Generate(hashBuilder) : string.Empty;
 
       return hasRedacted;
     }
 
-    private byte[] GetProcedureResponseBytes(ProcedureResponse response)
-      => JsonSerializer.SerializeToUtf8Bytes<ProcedureResponse>(response, serializerOptions);
+    private static ParameterSet GenerateParameterSet(IEnumerable<Parameter> parameters)
+    {
+      ParameterSet parameterSet = new ParameterSet(parameters.Count());
+      foreach (Parameter parameter in parameters)
+      {
+        if (parameter.Value != null)
+        {
+          int inputOutputType = parameter.Output ? ParameterSet.OUTPUT : ParameterSet.INPUT;
+          JsonElement value = (JsonElement)parameter.Value;
+          if (value.ValueKind == JsonValueKind.Array)
+          {
+            object[] values = value.EnumerateArray()
+              .Select(x => x.GetRawText())
+              .ToArray();
+            parameterSet.setParameter(parameter.Position, values, inputOutputType, GetParameterSetType(parameter.Type), (values.Length > 0), values.Length, null);
+          }
+          else
+          {
+            parameterSet.setParameter(parameter.Position, value.GetString(), inputOutputType, GetParameterSetType(parameter.Type), false, 0, null);
+          }
+        }
+        else
+        {
+          parameterSet.setParameter(parameter.Position, null, ParameterSet.OUTPUT, GetParameterSetType(parameter.Type), false, 0, null);
+        }
+      }
 
-    private ProcedureResponse GetProcedureFromBytes(byte[] bytes)
+      return parameterSet;
+    }
+    
+    /// <summary>
+    /// Get a Progress compliant parametertype integer.
+    /// </summary>
+    /// <param name="type">Parametertype to convert</param>
+    /// <returns></returns>
+    private static int GetParameterSetType(ParameterType type)
+    {
+      if (type == ParameterType.JSON)
+      {
+        return (int)ParameterType.MemPointer;
+      }
+      else
+      {
+        return (int)type;
+      }
+    }
+
+    private Dictionary<int, object> GetOutputParameters(Parameter[] requestParameters, ParameterSet parameters)
+      => requestParameters.Where(x => x.Output)
+          .ToDictionary(x => x.Position, x =>
+          { 
+            // We have to get it out of the parameter set because Progress... Grrrrr....
+            object value = parameters.getOutputParameter(x.Position);
+            if (value is Progress.Open4GL.Memptr pointer)
+            {
+              if (x.Type == ParameterType.JSON)
+              {
+                return JsonDocument.Parse(pointer.Bytes);
+              }
+
+              return pointer.Bytes;
+            }
+            else if (value is string result && x.Type == ParameterType.LongChar)
+            {
+              return JsonDocument.Parse(result);
+            }
+
+            return value;
+          });
+
+    private static byte[] GetProcedureResponseBytes(ProcedureResponse response)
+      => JsonSerializer.SerializeToUtf8Bytes(response, serializerOptions);
+
+    private static ProcedureResponse GetProcedureFromBytes(byte[] bytes)
       => JsonSerializer.Deserialize<ProcedureResponse>(bytes, serializerOptions);
   }
 }

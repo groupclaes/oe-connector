@@ -18,7 +18,7 @@ namespace GroupClaes.OpenEdge.Connector.Shared
     /// <summary>
     /// Resulting responses by OpenEdge with the index as key
     /// </summary>
-    public Dictionary<int, byte[]> Result { get; set; }
+    public Dictionary<int, object> Result { get; set; }
     /// <summary>
     /// The timestamp of the retrieved result
     /// </summary>

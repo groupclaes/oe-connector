@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 namespace GroupClaes.OpenEdge.Connector
@@ -24,9 +25,14 @@ namespace GroupClaes.OpenEdge.Connector
       services.AddStackExchangeRedisCache(options =>
         options.Configuration = Configuration["Redis:ConnectionString"]);
 
-      services.AddOpenEdge();
+      services.AddOpenEdge(Configuration["RAW:Connection"], Configuration["RAW:Username"], Configuration["RAW:Password"], Configuration["RAW:AppId"]);
 
       services.AddControllers();
+      services.AddLogging(opt =>
+      {
+        opt.AddConsole();
+      });
+
       services.AddSignalR()
         .AddMessagePackProtocol();
 
@@ -41,7 +47,6 @@ namespace GroupClaes.OpenEdge.Connector
     {
       if (env.IsDevelopment())
       {
-        app.UseDeveloperExceptionPage();
         app.UseSwagger();
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "GroupClaes.OpenEdge.Connector v1"));
       }
