@@ -9,11 +9,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
     public static IServiceCollection AddOpenEdge(this IServiceCollection collection,
         string url, string userId, string password, string appId)
     {
-      Connection connection = new Connection(url, userId, password, appId);
-      ProxyInterface proxyInterface = new ProxyInterface(connection);
-
       return collection.AddScoped<IOpenEdge, OpenEdge>()
-        .AddSingleton<IProxyInterface>(proxyInterface);
+        .AddScoped<IProxyInterface>(x => new ProxyInterface(new Connection(url, userId, password, appId)));
     }
   }
 }

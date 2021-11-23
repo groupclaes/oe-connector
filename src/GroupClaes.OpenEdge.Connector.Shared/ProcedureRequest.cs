@@ -20,5 +20,10 @@ namespace GroupClaes.OpenEdge.Connector.Shared
     /// </summary>
     /// <remark>The response will only be cached if there isn't one available yet.</remark>
     public int Cache { get; set; }
+    /// <summary>
+    /// TIme in seconds for a request to time out and a 408 to be returned.
+    /// </summary>
+    [JsonPropertyName("tw")]
+    public int Timeout { get; set; }
   }
 }

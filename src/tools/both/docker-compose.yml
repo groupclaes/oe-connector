@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  oe-connector:
+    image: 'docker-registry.groupclaes.be/groupclaes_oe-connector'
+    ports:
+      - '32000:5000'
+      - '32001:5001'

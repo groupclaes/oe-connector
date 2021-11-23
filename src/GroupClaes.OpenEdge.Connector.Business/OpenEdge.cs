@@ -9,10 +9,8 @@ using System.Threading.Tasks;
 using GroupClaes.OpenEdge.Connector.Business.Raw;
 using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Progress.Open4GL.DynamicAPI;
-using RAW;
 
 namespace GroupClaes.OpenEdge.Connector.Business
 {
@@ -21,13 +19,13 @@ namespace GroupClaes.OpenEdge.Connector.Business
     private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private const string CachePathPrefix = "OpenEdge:Procedures:";
 
-    private readonly IDistributedCache cache;
+    //private readonly IDistributedCache cache;
     private readonly ILogger<OpenEdge> logger;
     private readonly IProxyInterface proxyInterface;
 
-    public OpenEdge(IDistributedCache cache, ILogger<OpenEdge> logger, IProxyInterface proxyInterface)
+    public OpenEdge(/*IDistributedCache cache, */ILogger<OpenEdge> logger, IProxyInterface proxyInterface)
     {
-      this.cache = cache;
+      //this.cache = cache;
       this.logger = logger;
       this.proxyInterface = proxyInterface;
     }
@@ -38,18 +36,16 @@ namespace GroupClaes.OpenEdge.Connector.Business
       Stopwatch stopwatch = new Stopwatch();
       stopwatch.Start();
 #endif
+#if false
       byte[] rawData = null;
-      string cacheName = $"{CachePathPrefix}{request.Procedure}";
-      if (!string.IsNullOrEmpty(parameterHash))
-      {
-        cacheName += $":{parameterHash}";
-      }
-      logger.LogDebug("Using cache redis name {CacheKey}", cacheName);
+      string cacheName = GetCachedKey(request.Procedure, parameterHash);
       if (request.Cache < 1)
       {
+#endif
         logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
         return GetProcedureResponseBytes(await GetProcedureResponse(request, cancellationToken).ConfigureAwait(false));
-      }
+#if false
+    }
       else
       {
         logger.LogDebug("Attempting to fetch cached response for {Procedure}", request.Procedure);
@@ -78,7 +74,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
           ProcedureResponse result = await GetProcedureResponse(request, cancellationToken)
             .ConfigureAwait(false);
           logger.LogTrace("Executed {Procedure} on OpenEdge, result {@result}", request.Procedure, result);
-
           if (request.Cache > 0)
           {
             logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
@@ -94,7 +89,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           else
           {
             rawData = GetProcedureResponseBytes(result);
-          }
+        }
 
           logger.LogInformation("Cache result {Found} for {Procedure}", "MISS", request.Procedure);
 #if DEBUG
@@ -104,6 +99,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           return rawData;
         }
       }
+#endif
     }
     public async Task<ProcedureResponse> GetProcedureAsync(ProcedureRequest request, string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
     {
@@ -111,19 +107,17 @@ namespace GroupClaes.OpenEdge.Connector.Business
       Stopwatch stopwatch = new Stopwatch();
       stopwatch.Start();
 #endif
+#if false
       byte[] rawData;
-      string cacheName = $"{CachePathPrefix}{request.Procedure}";
-      if (!string.IsNullOrEmpty(parameterHash))
-      {
-        cacheName += $":{parameterHash}";
-      }
-      logger.LogDebug("Using cache redis name {CacheKey}", cacheName);
+      string cacheName = GetCachedKey(request.Procedure, parameterHash);
       if (request.Cache < 1)
       {
-        logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
+#endif
+      logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
         return await GetProcedureResponse(request, cancellationToken)
           .ConfigureAwait(false);
-      }
+#if false
+    }
       else
       {
         logger.LogDebug("Attempting to fetch cached response for {Procedure}", request.Procedure);
@@ -146,7 +140,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
             .ConfigureAwait(false);
           logger.LogTrace("Executed {Procedure} on OpenEdge, result {@result}", request.Procedure, result);
 
-          if (request.Cache > 0)
+          if (true || request.Cache > 0)
           {
             logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
 
@@ -167,6 +161,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           return result;
         }
       }
+#endif
     }
 
     private Task<ProcedureResponse> GetProcedureResponse(ProcedureRequest request, CancellationToken cancellationToken)
@@ -182,20 +177,31 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
         proxyInterface.RunProcedure(request.Procedure, parameters);
         cancellationToken.ThrowIfCancellationRequested();
-        Dictionary<int, object> outputsDictionary = GetOutputParameters(request.Parameters, parameters);
+        Dictionary<string, object> outputsDictionary = GetOutputParameters(request.Parameters, parameters);
 
         stopwatch.Stop();
         logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}", request.Procedure, stopwatch.ElapsedMilliseconds);
 
         if (outputsDictionary.All(x => x.Value != null))
         {
-          return new ProcedureResponse()
+          ProcedureResponse response = new ProcedureResponse
           {
             Status = 200,
             Procedure = request.Procedure,
-            Result = outputsDictionary,
             OriginTime = stopwatch.ElapsedMilliseconds
           };
+          if (outputsDictionary.Count == 1)
+          {
+            var result = outputsDictionary.First();
+            if (result.Key == string.Empty)
+            {
+              response.Result = result.Value;
+              return response;
+            }
+          }
+
+          response.Result = outputsDictionary;
+          return response;
         }
         else
         {
@@ -297,33 +303,59 @@ namespace GroupClaes.OpenEdge.Connector.Business
       }
     }
 
-    private Dictionary<int, object> GetOutputParameters(Parameter[] requestParameters, ParameterSet parameters)
-      => requestParameters.Where(x => x.Output)
-          .ToDictionary(x => x.Position, x =>
-          { 
-            // We have to get it out of the parameter set because Progress... Grrrrr....
-            object value = parameters.getOutputParameter(x.Position);
-            if (value is Progress.Open4GL.Memptr pointer)
-            {
-              if (x.Type == ParameterType.JSON)
-              {
-                return JsonDocument.Parse(pointer.Bytes);
-              }
+    private Dictionary<string, object> GetOutputParameters(Parameter[] requestParameters, ParameterSet parameters)
+    {
+      IEnumerable<Parameter> result = requestParameters.Where(x => x.Output);
+      if (result.Count() == 1)
+      {
+        var parameter = result.First();
+        if (!parameter.HasLabel)
+        {
+          return new Dictionary<string, object>
+          {
+            { string.Empty, ExtractAndParseValue(parameter, parameters) }
+          };
+        }
+      }
 
-              return pointer.Bytes;
-            }
-            else if (value is string result && x.Type == ParameterType.LongChar)
-            {
-              return JsonDocument.Parse(result);
-            }
-
-            return value;
-          });
+      return result.ToDictionary(x => x.ResponseLabel, x => ExtractAndParseValue(x, parameters));
+    }
 
     private static byte[] GetProcedureResponseBytes(ProcedureResponse response)
       => JsonSerializer.SerializeToUtf8Bytes(response, serializerOptions);
 
     private static ProcedureResponse GetProcedureFromBytes(byte[] bytes)
       => JsonSerializer.Deserialize<ProcedureResponse>(bytes, serializerOptions);
+
+    private static string GetCachedKey(string requestProcedure, string parameterHash)
+    {
+      if (!string.IsNullOrEmpty(parameterHash))
+      {
+        return $"{CachePathPrefix}{requestProcedure}:{parameterHash}";
+      }
+
+      return $"{CachePathPrefix}{requestProcedure}";
+    }
+
+    private static object ExtractAndParseValue(Parameter parameter, ParameterSet parameterSet)
+    {
+      // We have to get it out of the parameter set because Progress... Grrrrr....
+      object value = parameterSet.getOutputParameter(parameter.Position);
+      if (value is Progress.Open4GL.Memptr pointer)
+      {
+        if (parameter.Type == ParameterType.JSON)
+        {
+          return JsonDocument.Parse(pointer.Bytes);
+        }
+
+        return pointer.Bytes;
+      }
+      else if (value is string toParse && parameter.Type == ParameterType.LongChar)
+      {
+        return JsonDocument.Parse(toParse);
+      }
+
+      return value;
+    }
   }
 }
