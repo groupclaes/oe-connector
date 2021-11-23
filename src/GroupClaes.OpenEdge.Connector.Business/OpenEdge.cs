@@ -37,8 +37,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
       stopwatch.Start();
 #endif
 #if false
-      byte[] rawData = null;
-      string cacheName = GetCachedKey(request.Procedure, parameterHash);
       if (request.Cache < 1)
       {
 #endif
@@ -48,6 +46,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
     }
       else
       {
+        byte[] rawData = null;
+        string cacheName = GetCachedKey(request.Procedure, parameterHash);
         logger.LogDebug("Attempting to fetch cached response for {Procedure}", request.Procedure);
         try
         {
@@ -108,8 +108,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
       stopwatch.Start();
 #endif
 #if false
-      byte[] rawData;
-      string cacheName = GetCachedKey(request.Procedure, parameterHash);
       if (request.Cache < 1)
       {
 #endif
@@ -120,8 +118,9 @@ namespace GroupClaes.OpenEdge.Connector.Business
     }
       else
       {
+        string cacheName = GetCachedKey(request.Procedure, parameterHash);
         logger.LogDebug("Attempting to fetch cached response for {Procedure}", request.Procedure);
-        rawData = await cache.GetAsync(cacheName, cancellationToken)
+        byte[] rawData = await cache.GetAsync(cacheName, cancellationToken)
             .ConfigureAwait(false);
 
         if (rawData != null)
@@ -140,7 +139,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
             .ConfigureAwait(false);
           logger.LogTrace("Executed {Procedure} on OpenEdge, result {@result}", request.Procedure, result);
 
-          if (true || request.Cache > 0)
+          if (request.Cache > 0)
           {
             logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
 
@@ -345,7 +344,15 @@ namespace GroupClaes.OpenEdge.Connector.Business
       {
         if (parameter.Type == ParameterType.JSON)
         {
-          return JsonDocument.Parse(pointer.Bytes);
+          JsonDocument result = JsonDocument.Parse(pointer.Bytes);
+          if (result.RootElement.ValueKind == JsonValueKind.Array
+             && result.RootElement.GetArrayLength() == 1)
+          {
+            return result.RootElement.EnumerateArray()
+                .First();
+          }
+
+          return result;
         }
 
         return pointer.Bytes;
