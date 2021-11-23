@@ -4,6 +4,7 @@ using System.Diagnostics;
 #endif
 using System.Threading.Tasks;
 using GroupClaes.OpenEdge.Connector.Business;
+using GroupClaes.OpenEdge.Connector.Business.Exceptions;
 using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -50,13 +51,17 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
         logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@Parameters}",
           HttpContext.Connection.Id, request.Procedure, displayeableFilters);
 
-        byte[] response = await openEdge.ExecuteProcedureAsync(request, parameterHash, test, HttpContext.RequestAborted)
+        byte[] response = await openEdge.ExecuteProcedureWithTimeoutAsync(request, parameterHash, test, HttpContext.RequestAborted)
           .ConfigureAwait(false);
 #if DEBUG
         stopwatch.Stop();
         logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
 #endif
         return File(response, "application/json");
+      }
+      catch (OpenEdgeTimeoutException)
+      {
+        return StatusCode(408);
       }
       catch (Exception ex)
       {

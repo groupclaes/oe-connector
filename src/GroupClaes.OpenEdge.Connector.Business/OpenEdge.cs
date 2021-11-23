@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using GroupClaes.OpenEdge.Connector.Business.Exceptions;
 using GroupClaes.OpenEdge.Connector.Business.Raw;
 using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
@@ -30,6 +31,22 @@ namespace GroupClaes.OpenEdge.Connector.Business
       this.proxyInterface = proxyInterface;
     }
 
+    public async Task<byte[]> ExecuteProcedureWithTimeoutAsync(ProcedureRequest request, string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
+    {
+      Task<byte[]> result = ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
+      if (request.Timeout > 0)
+      {
+        Task firstResult = await Task.WhenAny(result, Task.Delay(request.Timeout, cancellationToken));
+        if (firstResult == result)
+        {
+          return result.Result;
+        }
+
+        throw new OpenEdgeTimeoutException();
+      }
+
+      return await result;
+    }
     public async Task<byte[]> ExecuteProcedureAsync(ProcedureRequest request, string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
     {
 #if DEBUG
@@ -43,7 +60,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
         logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
         return GetProcedureResponseBytes(await GetProcedureResponse(request, cancellationToken).ConfigureAwait(false));
 #if false
-    }
+      }
       else
       {
         byte[] rawData = null;
@@ -89,7 +106,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           else
           {
             rawData = GetProcedureResponseBytes(result);
-        }
+          }
 
           logger.LogInformation("Cache result {Found} for {Procedure}", "MISS", request.Procedure);
 #if DEBUG

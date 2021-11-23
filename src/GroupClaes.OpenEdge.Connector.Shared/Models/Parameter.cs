@@ -23,7 +23,9 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     /// <summary>
     /// Specify the type of value(s) provided
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public ParameterType Type { get; set; }
+      = ParameterType.String;
     /// <summary>
     /// Specify if value is an array
     /// </summary>
