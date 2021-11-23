@@ -2,6 +2,7 @@
 {
   public enum ParameterType : int
   {
+    Undefined = 0,
     String = 1,
     Date = 2,
     Boolean = 3,
@@ -12,7 +13,7 @@
     Integer = 4,
     Decimal = 5,
     Long = 7,
-    Int64 = 41,
+    Integer64 = 41,
 
     Handle = 10,
     MemPointer = 11,
@@ -24,6 +25,12 @@
     DynDataSet = 37,
     DateTime = 34,
     DateTimeTZ = 40,
+
+    /* Aliasses */
+    Bool = Boolean,
+    Int = Integer,
+    Int64 = Integer64,
+
 
     /* Custom types to be parsed internally */
     JSON = 15001,

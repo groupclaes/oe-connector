@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -286,16 +285,16 @@ namespace GroupClaes.OpenEdge.Connector.Business
             object[] values = value.EnumerateArray()
               .Select(x => x.GetRawText())
               .ToArray();
-            parameterSet.setParameter(parameter.Position, values, inputOutputType, GetParameterSetType(parameter.Type), (values.Length > 0), values.Length, null);
+            parameterSet.setParameter(parameter.Position, values, inputOutputType, GetParameterSetType(parameter), (values.Length > 0), values.Length, null);
           }
           else
           {
-            parameterSet.setParameter(parameter.Position, value.GetString(), inputOutputType, GetParameterSetType(parameter.Type), false, 0, null);
+            parameterSet.setParameter(parameter.Position, value.GetString(), inputOutputType, GetParameterSetType(parameter), false, 0, null);
           }
         }
         else
         {
-          parameterSet.setParameter(parameter.Position, null, ParameterSet.OUTPUT, GetParameterSetType(parameter.Type), false, 0, null);
+          parameterSet.setParameter(parameter.Position, null, ParameterSet.OUTPUT, GetParameterSetType(parameter), false, 0, null);
         }
       }
 
@@ -307,16 +306,26 @@ namespace GroupClaes.OpenEdge.Connector.Business
     /// </summary>
     /// <param name="type">Parametertype to convert</param>
     /// <returns></returns>
-    private static int GetParameterSetType(ParameterType type)
+    private static int GetParameterSetType(Parameter parameter)
     {
-      if (type == ParameterType.JSON)
+      if (parameter.Type == ParameterType.Undefined)
+      {
+        if (parameter.Output)
+        {
+          parameter.Type = ParameterType.JSON;
+          return (int)ParameterType.MemPointer;
+        }
+        else
+        {
+          parameter.Type = ParameterType.String;
+        }
+      }
+      else if (parameter.Type == ParameterType.JSON)
       {
         return (int)ParameterType.MemPointer;
       }
-      else
-      {
-        return (int)type;
-      }
+
+      return (int)parameter.Type;
     }
 
     private Dictionary<string, object> GetOutputParameters(Parameter[] requestParameters, ParameterSet parameters)
