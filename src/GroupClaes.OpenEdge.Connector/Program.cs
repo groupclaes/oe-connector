@@ -13,7 +13,7 @@ namespace GroupClaes.OpenEdge.Connector
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
             .UseWindowsService(x => {
-              x.ServiceName = "GroupClaes OpenEdge Connector, yeet";
+              x.ServiceName = "GroupClaes OpenEdge Connector";
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {

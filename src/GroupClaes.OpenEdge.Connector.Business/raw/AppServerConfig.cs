@@ -1,0 +1,24 @@
+﻿namespace GroupClaes.OpenEdge.Connector.Business.Raw
+{
+  public class AppServerConfig
+  {
+    private string _endpoint;
+
+    public string Endpoint
+    {
+      get => _endpoint;
+      set => SetConnectionString(value);
+    }
+    public string AppId { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set;  }
+
+    internal void SetConnectionString(string connectionString)
+    {
+      if (!connectionString.StartsWith("appserver://"))
+        _endpoint = "appserver://" + connectionString;
+      else
+        _endpoint = connectionString;
+    }
+  }
+}

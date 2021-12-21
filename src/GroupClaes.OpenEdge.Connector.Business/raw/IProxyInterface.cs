@@ -1,13 +1,9 @@
 ﻿using Progress.Open4GL.DynamicAPI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
-    public interface IProxyInterface
+    public interface IProxyInterface : IDisposable
     {
         /// <summary>
         /// Run a procedure in RAW

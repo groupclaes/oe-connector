@@ -1,5 +1,4 @@
-﻿using Progress.Open4GL;
-using Progress.Open4GL.DynamicAPI;
+﻿using Progress.Open4GL.DynamicAPI;
 using Progress.Open4GL.Proxy;
 using RAW;
 

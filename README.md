@@ -46,19 +46,36 @@ After the connection is initialized, the client will need to state the microserv
 The following structure is expressed in JSON, though through RPC this will be sent in the MessagePack format using our libraries.
 ```jsonc
 {
-  // Name of the procedure to be called in OpenEdge
+  // (Optional when using in HTTP uri suffix) Name of the procedure to be called in OpenEdge
   "proc": "{{Procedure Name}}",
   // Parameters to provide with the procedure
   "parm": [
     { "pos": 1, "value": "{{Value}}" },
-     // "redact": Redact the input value from any logging.
+     // (Optional) "redact": Redact the input value from any logging.
     { "pos": 2, "value": "{{Value}}", "redact": true },
-    // "out": Optional parameter, specifies the output field. No value is required
-    { "pos": 3, "out": true }
+    // (Optional) "out": Optional parameter, specifies the output field.
+    { "pos": 3, "out": true },
+    {
+      "pos": 4,
+      // (Optional) Set a label for this result instead of using the position as key.
+      "label": "test",
+      // (Optional) Do not remove encapsulating array if the result is an array of length 1
+      "ar": true,
+      "out": true
+    }
   ],
-  // Time in milliseconds the procedure should be cached if not cached already, 0 bypasses caching
+  // (Optional, default = 0) Time in milliseconds the procedure should be cached if not cached already, 0 bypasses caching
   // Always bypass caching for confidential information
-  "cache": 0
+  "cache": 0,
+  // (Optional, default = no timeout) Timeout in miliseconds for the request to openedge to abort.
+  "tw": 500,
+  // (Optional) Credentials
+  "creds": {
+    // OpenEdge Username
+    "user": "john",
+    // OpenEdge user password
+    "pwd": "VerrySecurePasswordWithSp$cialCh4rs"
+  }
 }
 ```
 
@@ -73,7 +90,8 @@ The following structure is expressed in JSON, though through RPC this will be se
   // null if none/at failure
   "result": {
     // The response will always be a binary array
-    "3": "{{Result}}"
+    "3": "{{Pos3Result}}",
+    "test": "{{Post4Result}}"
   },
   // Content age timestamp, null if newly requested/not cached
   "lastMod": -1,

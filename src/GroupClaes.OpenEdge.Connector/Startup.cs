@@ -25,7 +25,7 @@ namespace GroupClaes.OpenEdge.Connector
       services.AddStackExchangeRedisCache(options =>
         options.Configuration = Configuration["Redis:ConnectionString"]);
 
-      services.AddOpenEdge(Configuration["RAW:Connection"], Configuration["RAW:Username"], Configuration["RAW:Password"], Configuration["RAW:AppId"]);
+      services.AddOpenEdge();
 
       services.AddControllers();
       services.AddLogging(opt =>
@@ -45,7 +45,7 @@ namespace GroupClaes.OpenEdge.Connector
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-      if (env.IsDevelopment())
+      if (true && env.IsDevelopment())
       {
         app.UseSwagger();
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "GroupClaes.OpenEdge.Connector v1"));
