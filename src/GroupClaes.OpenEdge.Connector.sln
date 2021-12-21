@@ -1,17 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.6.30114.105
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31825.309
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroupClaes.OpenEdge.Connector.Shared", "GroupClaes.OpenEdge.Connector.Shared\GroupClaes.OpenEdge.Connector.Shared.csproj", "{0588E754-B7ED-4ED7-BBB3-AE387292C1CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GroupClaes.OpenEdge.Connector.Shared", "GroupClaes.OpenEdge.Connector.Shared\GroupClaes.OpenEdge.Connector.Shared.csproj", "{0588E754-B7ED-4ED7-BBB3-AE387292C1CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroupClaes.OpenEdge.Connector", "GroupClaes.OpenEdge.Connector\GroupClaes.OpenEdge.Connector.csproj", "{142BA1EB-DF91-40C9-AF7E-A0881446BBBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GroupClaes.OpenEdge.Connector", "GroupClaes.OpenEdge.Connector\GroupClaes.OpenEdge.Connector.csproj", "{142BA1EB-DF91-40C9-AF7E-A0881446BBBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroupClaes.OpenEdge.Connector.Client", "GroupClaes.OpenEdge.Connector.Client\GroupClaes.OpenEdge.Connector.Client.csproj", "{A103D68C-103D-448D-B5E8-7D733FA6B182}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GroupClaes.OpenEdge.Connector.Client", "GroupClaes.OpenEdge.Connector.Client\GroupClaes.OpenEdge.Connector.Client.csproj", "{A103D68C-103D-448D-B5E8-7D733FA6B182}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroupClaes.OpenEdge.Connector.Business", "GroupClaes.OpenEdge.Connector.Business\GroupClaes.OpenEdge.Connector.Business.csproj", "{8C8B4B5A-9ECF-4C4F-9183-62CA6CE20C55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GroupClaes.OpenEdge.Connector.Business", "GroupClaes.OpenEdge.Connector.Business\GroupClaes.OpenEdge.Connector.Business.csproj", "{8C8B4B5A-9ECF-4C4F-9183-62CA6CE20C55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{29BBA365-F7D0-47BB-9FE0-FBBAD98522DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp", "TestApp\TestApp.csproj", "{29BBA365-F7D0-47BB-9FE0-FBBAD98522DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroupClaes.OpenEdge.Connector.Business.Tests", "GroupClaes.OpenEdge.Connector.Business.Tests\GroupClaes.OpenEdge.Connector.Business.Tests.csproj", "{427FE9AA-776F-4617-986B-3B280337104A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0588E754-B7ED-4ED7-BBB3-AE387292C1CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -86,5 +85,23 @@ Global
 		{29BBA365-F7D0-47BB-9FE0-FBBAD98522DA}.Release|x64.Build.0 = Release|Any CPU
 		{29BBA365-F7D0-47BB-9FE0-FBBAD98522DA}.Release|x86.ActiveCfg = Release|Any CPU
 		{29BBA365-F7D0-47BB-9FE0-FBBAD98522DA}.Release|x86.Build.0 = Release|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Debug|x64.Build.0 = Debug|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Debug|x86.Build.0 = Debug|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Release|x64.ActiveCfg = Release|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Release|x64.Build.0 = Release|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Release|x86.ActiveCfg = Release|Any CPU
+		{427FE9AA-776F-4617-986B-3B280337104A}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {064BC22C-FB90-41A1-93AC-3F14EFBBEEF9}
 	EndGlobalSection
 EndGlobal

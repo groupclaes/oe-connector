@@ -25,5 +25,7 @@ namespace GroupClaes.OpenEdge.Connector.Shared
     /// </summary>
     [JsonPropertyName("tw")]
     public int Timeout { get; set; }
+    [JsonPropertyName("creds")]
+    public ProcedureCredentials Credentials { get; set; }
   }
 }

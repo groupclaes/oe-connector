@@ -26,10 +26,6 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ParameterType Type { get; set; }
     /// <summary>
-    /// Specify if value is an array
-    /// </summary>
-    public bool Multiple { get; set; }
-    /// <summary>
     /// Should redact the contents from any logging
     /// </summary>
     public bool Redact { get; set; }
@@ -39,6 +35,8 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     /// <value></value>
     [JsonPropertyName("out")]
     public bool Output { get; set; }
+    [JsonPropertyName("ar")]
+    public bool ForceArray { get; set; }
 
     [JsonIgnore]
     public string ResponseLabel

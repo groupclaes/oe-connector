@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace GroupClaes.OpenEdge.Connector.Shared
@@ -12,8 +11,9 @@ namespace GroupClaes.OpenEdge.Connector.Shared
     [JsonPropertyName("proc")]
     public string Procedure { get; set; }
     /// <summary>
-    /// Procedure success statuscode
+    /// Procedure handling success statuscode
     /// </summary>
+    //[JsonIgnore]
     public int Status { get; set; }
     /// <summary>
     /// Resulting responses by OpenEdge with the index as key
