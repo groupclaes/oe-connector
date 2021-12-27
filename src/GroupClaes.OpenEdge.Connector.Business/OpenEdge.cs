@@ -12,6 +12,7 @@ using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Progress.Open4GL.DynamicAPI;
+using static Progress.Open4GL.DynamicAPI.SessionPool;
 
 namespace GroupClaes.OpenEdge.Connector.Business
 {
@@ -39,33 +40,43 @@ namespace GroupClaes.OpenEdge.Connector.Business
     public async Task<byte[]> ExecuteProcedureWithTimeoutAsync(ProcedureRequest request,
       string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
     {
-      Task<byte[]> result = ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
       if (request.Timeout > 0)
       {
-        Task firstResult = await Task.WhenAny(result, Task.Delay(request.Timeout, cancellationToken));
-        if (firstResult == result)
+        try
         {
-          return result.Result;
+          Task<byte[]> procedureTask = ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
+
+          return await procedureTask.WaitAsync(TimeSpan.FromMilliseconds(request.Timeout), cancellationToken);
         }
-
-        throw new OpenEdgeTimeoutException();
+        catch (Exception ex)
+          when (ex is TaskCanceledException || ex is TimeoutException)
+        {
+          throw new OpenEdgeTimeoutException();
+        }
+        catch (NoAvailableSessionsException ex)
+        {
+          throw new OpenEdgeRefusedException(ex);
+        }
       }
-
-      return await result;
+      else
+      {
+        return await ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
+      }
     }
     public async Task<byte[]> ExecuteProcedureAsync(ProcedureRequest request, string parameterHash = null,
       bool isTest = false, CancellationToken cancellationToken = default)
     {
 #if DEBUG
-      Stopwatch stopwatch = new Stopwatch();
-      stopwatch.Start();
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
 #endif
 #if false
       if (request.Cache < 1)
       {
 #endif
         logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
-        return GetJsonBytes(await GetProcedureResponse(request, cancellationToken).ConfigureAwait(false));
+        ProcedureResponse response = await GetProcedureResponse(request, cancellationToken);
+        return GetJsonBytes(response);
 #if false
       }
       else
@@ -129,16 +140,16 @@ namespace GroupClaes.OpenEdge.Connector.Business
       string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
     {
 #if DEBUG
-      Stopwatch stopwatch = new Stopwatch();
-      stopwatch.Start();
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
 #endif
 #if false
       if (request.Cache < 1)
       {
 #endif
-      logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
+        logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
         return await GetProcedureResponse(request, cancellationToken)
-          .ConfigureAwait(false);
+            .ConfigureAwait(false);
 #if false
     }
       else
@@ -230,7 +241,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
     private Task<ProcedureResponse> GetProcedureResponse(ProcedureRequest request, CancellationToken cancellationToken)
     {
-      return Task.Run(() =>
+      return Task.Run(async () =>
       {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -238,7 +249,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
         ParameterSet parameters = GenerateParameterSet(request.Parameters);
 
         cancellationToken.ThrowIfCancellationRequested();
-        ExecuteProcedureOnCorrectProxyInterface(request, parameters);
+        await ExecuteProcedureOnCorrectProxyInterface(request, parameters, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         Dictionary<string, object> outputsDictionary = GetOutputParameters(request.Parameters, parameters);
 
@@ -531,7 +542,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
       return null;
     }
 
-    private void ExecuteProcedureOnCorrectProxyInterface(ProcedureRequest request, ParameterSet parameters)
+    private async Task ExecuteProcedureOnCorrectProxyInterface(ProcedureRequest request, ParameterSet parameters,
+      CancellationToken cancellationToken = default)
     {
       IProxyInterface proxyInterface;
       if (request.Credentials != null)
@@ -547,8 +559,13 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
       using (proxyInterface)
       {
-        proxyInterface.RunProcedure(request.Procedure, parameters);
+        Task procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters));
+        while (!procedureTask.IsCompleted)
+        {
+          await Task.Delay(1, cancellationToken);
+        }
       }
+      cancellationToken.ThrowIfCancellationRequested();
     }
   }
 }

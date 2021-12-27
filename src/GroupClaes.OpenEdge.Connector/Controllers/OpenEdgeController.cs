@@ -26,6 +26,7 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
 
     [HttpPost("{procedure}/test")]
     [ProducesResponseType(typeof(ProcedureResponse), 200)]
+    [ProducesResponseType(408)]
     [ProducesResponseType(500)]
     public Task<ActionResult> ExecuteProcedure([FromBody]ProcedureRequest request, string procedure)
       => ExecuteProcedure(request, procedure, true); 
@@ -33,6 +34,7 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
     [HttpPost]
     [HttpPost("{procedure}")]
     [ProducesResponseType(typeof(ProcedureResponse), 200)]
+    [ProducesResponseType(408)]
     [ProducesResponseType(500)]
     public async Task<ActionResult> ExecuteProcedure([FromBody]ProcedureRequest request, string procedure, bool test = false)
     {

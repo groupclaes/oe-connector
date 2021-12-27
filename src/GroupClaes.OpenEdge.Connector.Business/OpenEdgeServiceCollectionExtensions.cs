@@ -9,8 +9,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
     {
       return collection.AddSingleton<IChecksumService, ChecksumService>()
         .AddSingleton<IProxyProvider, ProxyProvider>()
-        .AddScoped<IProxyInterface>(x => x.GetRequiredService<IProxyProvider>()
-          .CreateProxyInstance())
         .AddScoped<IOpenEdge, OpenEdge>();
     }
   }

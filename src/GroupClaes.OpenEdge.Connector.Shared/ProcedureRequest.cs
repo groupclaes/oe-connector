@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using System.Threading;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 
 namespace GroupClaes.OpenEdge.Connector.Shared
