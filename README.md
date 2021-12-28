@@ -68,6 +68,7 @@ The following structure is expressed in JSON, though through RPC this will be se
   // Always bypass caching for confidential information
   "cache": 0,
   // (Optional, default = no timeout) Timeout in miliseconds for the request to openedge to abort.
+  // 0 or less = no timeout, timeout window range (1 - 300,000) -> 
   "tw": 500,
   // (Optional) Credentials
   "creds": {

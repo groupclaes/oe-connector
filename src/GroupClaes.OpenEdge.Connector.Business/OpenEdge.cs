@@ -22,6 +22,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private const string CachePathPrefix = "OpenEdge:Procedures:";
+    private const int TimeoutMaxLength = 1000 * 60 * 5; // Max 5 minutes 
 
     //private readonly IDistributedCache cache;
     private readonly ILogger<OpenEdge> logger;
@@ -42,11 +43,13 @@ namespace GroupClaes.OpenEdge.Connector.Business
     {
       if (request.Timeout > 0)
       {
+
         try
         {
           Task<byte[]> procedureTask = ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
 
-          return await procedureTask.WaitAsync(TimeSpan.FromMilliseconds(request.Timeout), cancellationToken);
+          return await procedureTask.WaitAsync(
+            TimeSpan.FromMilliseconds(request.Timeout > TimeoutMaxLength ? TimeoutMaxLength : request.Timeout), cancellationToken);
         }
         catch (Exception ex)
           when (ex is TaskCanceledException || ex is TimeoutException)
