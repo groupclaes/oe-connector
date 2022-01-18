@@ -12,6 +12,7 @@
     public string AppId { get; set; }
     public string Username { get; set; }
     public string Password { get; set;  }
+    public string PathPrefix { get; set; }
 
     internal void SetConnectionString(string connectionString)
     {

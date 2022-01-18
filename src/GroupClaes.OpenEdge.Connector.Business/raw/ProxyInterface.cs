@@ -8,13 +8,14 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
   internal class ProxyInterface : AppObject, IProxyInterface
   {
     private new const int ProxyGenVersion = 1;
+    private const int CurrentDynamicApiVersion = 5;
     private readonly Connection connection;
 
     public ProxyInterface(Connection connection)
     {
       this.connection = connection;
 
-      if (RunTimeProperties.DynamicApiVersion != 5)
+      if (RunTimeProperties.DynamicApiVersion != CurrentDynamicApiVersion)
       {
         throw new Open4GLException(base.WrongProxyVer, null);
       }
@@ -27,19 +28,22 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
     }
 
-    public RqContext RunProcedure(string procName, ParameterSet params_Renamed) =>
+    public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed) =>
             base.runProcedure(procName, params_Renamed);
 
-    public RqContext RunProcedure(string procName, ParameterSet params_Renamed, MetaSchema schema) =>
+    public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed, MetaSchema schema) =>
         base.runProcedure(procName, params_Renamed, schema);
 
-    public RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema) =>
+    public virtual RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema) =>
         base.runProcedure(requestID, procName, params_Renamed, schema);
 
     public new virtual void Dispose()
     {
-      base.Dispose();
-      this.connection.Dispose();
+      if (!disposed)
+      {
+        this.connection.Dispose();
+        base.Dispose();
+      }
     }
   }
 }

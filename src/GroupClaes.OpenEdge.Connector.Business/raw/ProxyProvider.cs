@@ -34,6 +34,19 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       return new ProxyInterface(connection);
     }
 
+    public IProxyInterface CreateProxyInstance(string appServer, string userId, string password, string appServerInfo, string procedurePrefix)
+    {
+      AppServerConfig config = GetAppServerConfig(appServer);
+
+      Connection connection = new Connection(config.Endpoint,
+        userId ?? config.Username,
+        password ?? config.Password,
+        appServerInfo ?? config.AppId);
+
+      return new PrefixedProxyInterface(connection,
+        procedurePrefix ?? config.PathPrefix);
+    }
+
     private AppServerConfig GetAppServerConfig(string appServer)
     {
       AppServerConfig appConfig = new AppServerConfig();

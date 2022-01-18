@@ -21,8 +21,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
     private static readonly JsonSerializerOptions SerializerOptions
       = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    private const string CachePathPrefix = "OpenEdge:Procedures:";
-    private const int TimeoutMaxLength = 1000 * 60 * 5; // Max 5 minutes 
+    private const string CachePathPrefix = "OpenEdge:Procedures:"; 
 
     //private readonly IDistributedCache cache;
     private readonly ILogger<OpenEdge> logger;
@@ -43,13 +42,15 @@ namespace GroupClaes.OpenEdge.Connector.Business
     {
       if (request.Timeout > 0)
       {
-
         try
         {
           Task<byte[]> procedureTask = ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
 
           return await procedureTask.WaitAsync(
-            TimeSpan.FromMilliseconds(request.Timeout > TimeoutMaxLength ? TimeoutMaxLength : request.Timeout), cancellationToken);
+            TimeSpan.FromMilliseconds(
+              request.Timeout > Constants.TimeoutMaxLength
+                ? Constants.TimeoutMaxLength : request.Timeout),
+            cancellationToken);
         }
         catch (Exception ex)
           when (ex is TaskCanceledException || ex is TimeoutException)
@@ -528,7 +529,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       if (returnCode.Length > 1)
       {
         ProcedureResult result = new ProcedureResult();
-        if (Regexes.HTTPStatusCode.IsMatch(returnCode[0]))
+        if (Regexes.HttpStatusCode.IsMatch(returnCode[0]))
         {
           result.StatusCode = int.Parse(returnCode[0]);
           result.Title = returnCode[1];
@@ -551,9 +552,11 @@ namespace GroupClaes.OpenEdge.Connector.Business
       IProxyInterface proxyInterface;
       if (request.Credentials != null)
       {
-        proxyInterface = proxyProvider.CreateProxyInstance(request.Credentials.AppServer ?? "default",
-            request.Credentials.Username,
-            request.Credentials.Password);
+        proxyInterface = proxyProvider.CreateProxyInstance(
+          request.Credentials.AppServer ?? Constants.DefaultOpenEdgeEndpoint,
+          request.Credentials.Username,
+          request.Credentials.Password,
+          null, null);
       }
       else
       {

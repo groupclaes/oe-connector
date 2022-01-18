@@ -79,7 +79,6 @@ The following structure is expressed in JSON, though through RPC this will be se
   }
 }
 ```
-
 ### Output structure
 The following structure is expressed in JSON, though through RPC this will be sent in the MessagePack format using our libraries.
 ```jsonc

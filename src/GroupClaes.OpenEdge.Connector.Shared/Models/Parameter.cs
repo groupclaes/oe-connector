@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -5,12 +6,12 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
 {
   public class Parameter
   {
-    private static readonly Regex LabelRegex = new Regex(@"^[a-z][a-zA-Z0-9-]*$");
     /// <summary>
     /// Position index of the parameter
     /// </summary>
     /// <remark>The index is always 1-based and thus does not start at 0</remark>
     [JsonPropertyName("pos")]
+    [Range(1, 999)]
     public int Position { get; set; }
     /// <summary>
     /// Label name to rename output position key to
@@ -45,7 +46,7 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     }
 
     [JsonIgnore]
-    public bool HasLabel { get => Label != null && LabelRegex.IsMatch(Label); }
+    public bool HasLabel { get => Label != null && Regexes.Label.IsMatch(Label); }
 
     public static Parameter CreateOutput(int position)
       => new Parameter

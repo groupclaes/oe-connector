@@ -10,5 +10,6 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     IProxyInterface CreateProxyInstance(string appServer);
     IProxyInterface CreateProxyInstance(string appServer, string userId, string password);
     IProxyInterface CreateProxyInstance(string appServer, string userId, string password, string appServerInfo);
+    IProxyInterface CreateProxyInstance(string appServer, string userId, string password, string appServerInfo, string procedurePrefix);
   }
 }
