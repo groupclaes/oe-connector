@@ -20,10 +20,10 @@
 
   <ItemGroup>
     <Reference Include="Progress.Messages">
-      <HintPath>..\..\..\..\..\..\deps\Progress.Messages.dll</HintPath>
+      <HintPath>..\deps\Progress.Messages.dll</HintPath>
     </Reference>
     <Reference Include="Progress.o4glrt">
-      <HintPath>..\..\..\..\..\..\deps\Progress.o4glrt.dll</HintPath>
+      <HintPath>..\deps\Progress.o4glrt.dll</HintPath>
     </Reference>
   </ItemGroup>
   
