@@ -21,7 +21,11 @@ namespace GroupClaes.OpenEdge.Connector
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
-                .WriteTo.Elasticsearch(ConfigureElasticSink(context.Configuration)))
+                .WriteTo.Console()
+#if false
+                .WriteTo.Elasticsearch(ConfigureElasticSink(context.Configuration))
+#endif
+            )
             .ConfigureWebHostDefaults(webBuilder =>
             {
               webBuilder.UseStartup<Startup>();

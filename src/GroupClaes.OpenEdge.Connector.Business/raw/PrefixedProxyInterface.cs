@@ -32,7 +32,14 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       => base.runProcedure(requestID, GetPrefixPath(procName), params_Renamed, schema);
 
     private string GetPrefixPath(string procedure)
-      => procedure.StartsWith(prefixPath)
+    {
+      if (prefixPath == null)
+      {
+        return procedure;
+      }
+
+      return procedure.StartsWith(prefixPath)
         ? procedure : $"{prefixPath}{procedure}";
+    }
   }
 }
