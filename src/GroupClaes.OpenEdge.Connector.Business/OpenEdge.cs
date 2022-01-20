@@ -565,10 +565,13 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
       using (proxyInterface)
       {
-        Task procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters));
-        while (!procedureTask.IsCompleted)
+        using (Task procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters)))
         {
-          await Task.Delay(1, cancellationToken);
+          // Check if the task has been cancelled.
+          while (!procedureTask.IsCompleted)
+          {
+            await Task.Delay(1, cancellationToken);
+          }
         }
       }
       cancellationToken.ThrowIfCancellationRequested();

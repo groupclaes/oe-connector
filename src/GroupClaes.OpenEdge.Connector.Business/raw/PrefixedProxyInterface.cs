@@ -1,13 +1,16 @@
-﻿using Progress.Open4GL.DynamicAPI;
+﻿using Microsoft.Extensions.Logging;
+using Progress.Open4GL.DynamicAPI;
 using Progress.Open4GL.Proxy;
 
 namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
   internal sealed class PrefixedProxyInterface : ProxyInterface
   {
+    private readonly ILogger<PrefixedProxyInterface> logger;
     private readonly string prefixPath;
-    public PrefixedProxyInterface(Connection connection, string prefixPath) : base(connection)
+    public PrefixedProxyInterface(ILogger<PrefixedProxyInterface> logger, Connection connection, string prefixPath) : base(connection)
     {
+      this.logger = logger;
       if (prefixPath != null)
       {
         if (prefixPath.EndsWith("/"))
@@ -33,13 +36,16 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     private string GetPrefixPath(string procedure)
     {
-      if (prefixPath == null)
+      if (prefixPath == null || procedure.StartsWith(prefixPath))
       {
+        logger.LogDebug("No prefix configured, or the prefix is already prepended using {Procedure} with {Prefix}", procedure, prefixPath);
         return procedure;
       }
-
-      return procedure.StartsWith(prefixPath)
-        ? procedure : $"{prefixPath}{procedure}";
+      else
+      {
+        logger.LogDebug("Prefixing procedure {Procedure} with path prefix {Prefix}", procedure, prefixPath);
+        return $"{prefixPath}{procedure}";
+      }
     }
   }
 }

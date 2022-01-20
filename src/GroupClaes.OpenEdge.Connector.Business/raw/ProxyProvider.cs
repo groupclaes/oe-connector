@@ -1,14 +1,21 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Progress.Open4GL.Proxy;
+using System;
 
 namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
   internal class ProxyProvider : IProxyProvider
   {
+    private readonly ILogger<ProxyProvider> logger;
     private readonly IConfigurationSection configurationSection;
-    public ProxyProvider(IConfiguration configuration)
+    private readonly IServiceProvider serviceProvider;
+    public ProxyProvider(ILogger<ProxyProvider> logger, IConfiguration configuration, IServiceProvider serviceProvider)
     {
+      this.logger = logger;
       configurationSection = configuration.GetSection("OpenEdge");
+      this.serviceProvider = serviceProvider;
     }
 
     public IProxyInterface CreateProxyInstance()
@@ -31,7 +38,9 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         password ?? config.Password,
         appServerInfo ?? config.AppId);
 
-      return new PrefixedProxyInterface(connection, null);
+      logger.LogDebug("Retrieved app server config for {Config.Endpoint} with appId {Config.AppId} using {Config.Username}", config.Endpoint, config.AppId, config.Username);
+
+      return new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(), connection, null);
     }
 
     public IProxyInterface CreateProxyInstance(string appServer, string userId, string password, string appServerInfo, string procedurePrefix)
@@ -43,7 +52,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         password ?? config.Password,
         appServerInfo ?? config.AppId);
 
-      return new PrefixedProxyInterface(connection,
+      return new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(), connection,
         procedurePrefix ?? config.PathPrefix);
     }
 
@@ -55,5 +64,8 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
       return appConfig;
     }
+
+    private ILogger<T> GetLogger<T>() where T : IProxyInterface
+      => serviceProvider.GetRequiredService<ILogger<T>>();
   }
 }
