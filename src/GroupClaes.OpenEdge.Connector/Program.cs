@@ -22,7 +22,7 @@ namespace GroupClaes.OpenEdge.Connector
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-#if false
+#if !DEBUG
                 .WriteTo.Elasticsearch(ConfigureElasticSink(context.Configuration))
 #endif
             )

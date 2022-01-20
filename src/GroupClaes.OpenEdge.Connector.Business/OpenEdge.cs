@@ -40,31 +40,42 @@ namespace GroupClaes.OpenEdge.Connector.Business
     public async Task<byte[]> ExecuteProcedureWithTimeoutAsync(ProcedureRequest request,
       string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
     {
-      if (request.Timeout > 0)
+      try
       {
-        try
+        if (request.Timeout > 0)
         {
-          Task<byte[]> procedureTask = ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
+          try
+          {
+            Task<byte[]> procedureTask = ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
 
-          return await procedureTask.WaitAsync(
-            TimeSpan.FromMilliseconds(
-              request.Timeout > Constants.TimeoutMaxLength
-                ? Constants.TimeoutMaxLength : request.Timeout),
-            cancellationToken);
+            return await procedureTask.WaitAsync(
+              TimeSpan.FromMilliseconds(
+                request.Timeout > Constants.TimeoutMaxLength
+                  ? Constants.TimeoutMaxLength : request.Timeout),
+              cancellationToken);
+          }
+          catch (Exception ex)
+            when (ex is TaskCanceledException || ex is TimeoutException)
+          {
+            logger.LogError(ex, "A task has been cancelled, or the request has timed out executing procedure {Procedure}", request.Procedure);
+            throw new OpenEdgeTimeoutException();
+          }
         }
-        catch (Exception ex)
-          when (ex is TaskCanceledException || ex is TimeoutException)
+        else
         {
-          throw new OpenEdgeTimeoutException();
-        }
-        catch (NoAvailableSessionsException ex)
-        {
-          throw new OpenEdgeRefusedException(ex);
+          return await ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
         }
       }
-      else
+      catch (NoAvailableSessionsException ex)
       {
-        return await ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
+        logger.LogError(ex, "No available session, the connection was refused by open edge when executing procedure {Procedure}", request.Procedure);
+        throw new OpenEdgeRefusedException(ex);
+      }
+      catch (Exception ex)
+        when(!(ex is OpenEdgeTimeoutException))
+      {
+        logger.LogError(ex, "An unhandled exception occurred when executing procedure {Procedure}", request.Procedure);
+        throw;
       }
     }
     public async Task<byte[]> ExecuteProcedureAsync(ProcedureRequest request, string parameterHash = null,

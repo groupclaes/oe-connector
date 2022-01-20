@@ -28,14 +28,14 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
     }
 
-    public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed) =>
-            base.runProcedure(procName, params_Renamed);
+    public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed)
+      => base.runProcedure(procName, params_Renamed);
 
-    public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed, MetaSchema schema) =>
-        base.runProcedure(procName, params_Renamed, schema);
+    public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed, MetaSchema schema)
+      => base.runProcedure(procName, params_Renamed, schema);
 
-    public virtual RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema) =>
-        base.runProcedure(requestID, procName, params_Renamed, schema);
+    public virtual RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema)
+      => base.runProcedure(requestID, procName, params_Renamed, schema);
 
     public new virtual void Dispose()
     {
