@@ -1,4 +1,5 @@
-﻿using Progress.Open4GL;
+﻿using Microsoft.Extensions.Logging;
+using Progress.Open4GL;
 using Progress.Open4GL.DynamicAPI;
 using Progress.Open4GL.Exceptions;
 using Progress.Open4GL.Proxy;
@@ -7,13 +8,16 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
   internal class ProxyInterface : AppObject, IProxyInterface
   {
+    protected readonly ILogger<ProxyInterface> logger;
+
     private new const int ProxyGenVersion = 1;
     private const int CurrentDynamicApiVersion = 5;
     private readonly Connection connection;
 
-    public ProxyInterface(Connection connection)
+    public ProxyInterface(ILogger<ProxyInterface> logger, Connection connection)
     {
       this.connection = connection;
+      this.logger = logger;
 
       if (RunTimeProperties.DynamicApiVersion != CurrentDynamicApiVersion)
       {
@@ -22,10 +26,13 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
       if (string.IsNullOrEmpty(connection.Url))
       {
+        logger.LogWarning("Provided connection Url is empty, defaulting to ProxyRAW");
         connection.Url = "ProxyRAW";
       }
 
+      logger.LogTrace("Pre application object initialization, {@Connection}", connection);
       initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
+      logger.LogTrace("Post application object initialization");
     }
 
     public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed)
@@ -39,10 +46,12 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     public new virtual void Dispose()
     {
+      logger.LogTrace("Pre disposing");
       if (!disposed)
       {
-        this.connection.Dispose();
         base.Dispose();
+        connection.Dispose();
+        logger.LogTrace("Application and connection dispose");
       }
     }
   }

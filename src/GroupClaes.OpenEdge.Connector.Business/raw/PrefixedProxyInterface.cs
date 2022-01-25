@@ -6,11 +6,9 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
   internal sealed class PrefixedProxyInterface : ProxyInterface
   {
-    private readonly ILogger<PrefixedProxyInterface> logger;
     private readonly string prefixPath;
-    public PrefixedProxyInterface(ILogger<PrefixedProxyInterface> logger, Connection connection, string prefixPath) : base(connection)
+    public PrefixedProxyInterface(ILogger<PrefixedProxyInterface> logger, Connection connection, string prefixPath) : base(logger, connection)
     {
-      this.logger = logger;
       if (prefixPath != null)
       {
         if (prefixPath.EndsWith("/"))
