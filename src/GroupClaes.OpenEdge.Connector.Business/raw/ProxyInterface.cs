@@ -30,9 +30,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         connection.Url = "ProxyRAW";
       }
 
-      logger.LogTrace("Pre application object initialization, {@Connection}", connection);
       initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
-      logger.LogTrace("Post application object initialization");
     }
 
     public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed)
@@ -46,12 +44,10 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     public new virtual void Dispose()
     {
-      logger.LogTrace("Pre disposing");
       if (!disposed)
       {
         base.Dispose();
         connection.Dispose();
-        logger.LogTrace("Application and connection dispose");
       }
     }
   }

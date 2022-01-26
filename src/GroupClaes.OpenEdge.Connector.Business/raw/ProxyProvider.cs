@@ -20,13 +20,13 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     public IProxyInterface CreateProxyInstance()
 
-      => CreateProxyInstance("default", null, null, null);
+      => CreateProxyInstance(Constants.DefaultOpenEdgeEndpoint, null, null, null);
 
     public IProxyInterface CreateProxyInstance(string appServer)
       => CreateProxyInstance(appServer, null, null, null);
 
     public IProxyInterface CreateProxyInstance(string appServer, string userId, string password)
-      => CreateProxyInstance(appServer, userId, password, "");
+      => CreateProxyInstance(appServer, userId, password, null);
 
     public IProxyInterface CreateProxyInstance(string appServer, string userId, string password,
       string appServerInfo)
@@ -40,7 +40,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
       logger.LogDebug("Retrieved app server config for {Config.Endpoint} with appId {Config.AppId} using {Config.Username}", config.Endpoint, config.AppId, config.Username);
 
-      return new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(), connection, null);
+      return new ProxyInterface(GetLogger<PrefixedProxyInterface>(), connection);
     }
 
     public IProxyInterface CreateProxyInstance(string appServer, string userId, string password, string appServerInfo, string procedurePrefix)

@@ -9,7 +9,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     private readonly string prefixPath;
     public PrefixedProxyInterface(ILogger<PrefixedProxyInterface> logger, Connection connection, string prefixPath) : base(logger, connection)
     {
-      if (prefixPath != null)
+      if (!string.IsNullOrWhiteSpace(prefixPath))
       {
         if (prefixPath.EndsWith("/"))
         {
