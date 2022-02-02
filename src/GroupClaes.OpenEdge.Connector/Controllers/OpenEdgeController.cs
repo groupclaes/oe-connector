@@ -17,11 +17,13 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
   {
     private readonly ILogger<OpenEdgeController> logger;
     private readonly IOpenEdge openEdge;
+    private readonly IParameterService parameterService;
 
-    public OpenEdgeController(ILogger<OpenEdgeController> logger, IOpenEdge openEdge)
+    public OpenEdgeController(ILogger<OpenEdgeController> logger, IOpenEdge openEdge, IParameterService parameterService)
     {
       this.logger = logger;
       this.openEdge = openEdge;
+      this.parameterService = parameterService;
     }
 
     [HttpPost("{procedure}/test")]
@@ -49,7 +51,7 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
 #endif
-        bool hasRedacted = openEdge.GetFilteredParameters(request, out Parameter[] displayeableFilters, out string parameterHash);
+        Parameter[] displayeableFilters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
         logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@Parameters}",
           HttpContext.Connection.Id, request.Procedure, displayeableFilters);
 

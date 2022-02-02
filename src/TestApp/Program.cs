@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Threading.Tasks;
 using GroupClaes.OpenEdge.Connector.Client;
 using GroupClaes.OpenEdge.Connector.Shared;
@@ -43,7 +44,7 @@ namespace TestApp
         {
           Output = true,
           Position = 1,
-          Value = new { cheese = "true" }
+          Value = JsonSerializer.SerializeToElement(new { Cheese = true })
         },
         new Parameter
         {

@@ -30,24 +30,24 @@ namespace GroupClaes.OpenEdge.Connector.Business.Tests
       openEdge = new OpenEdge(loggerMock.Object, checksumMock.Object, proxyProviderMock.Object);
     }
 
-    [Fact]
-    public void GetFilteredParameters_ShouldReturnEmptyHashAndNoRedactedIfNoParametersAreSet()
-    {
-      // Arrange
-      Parameter[] parametes = Array.Empty<Parameter>();
-      ProcedureRequest request = new ProcedureRequest
-      {
-        Parameters = parametes
-      };
+    //[Fact]
+    //public void GetFilteredParameters_ShouldReturnEmptyHashAndNoRedactedIfNoParametersAreSet()
+    //{
+    //  // Arrange
+    //  Parameter[] parametes = Array.Empty<Parameter>();
+    //  ProcedureRequest request = new ProcedureRequest
+    //  {
+    //    Parameters = parametes
+    //  };
 
-      // Act
-      var result = openEdge.GetFilteredParameters(request, out var displayeable, out string parameterHash);
+    //  // Act
+    //  var result = openEdge.GetFilteredParameters(request, out var displayeable, out string parameterHash);
 
 
-      // Assert
-      Assert.False(result);
-      Assert.Equal(string.Empty, parameterHash);
-      Assert.Empty(displayeable);
-    }
+    //  // Assert
+    //  Assert.False(result);
+    //  Assert.Equal(string.Empty, parameterHash);
+    //  Assert.Empty(displayeable);
+    //}
   }
 }

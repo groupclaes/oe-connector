@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 
 namespace GroupClaes.OpenEdge.Connector.Shared.Models
 {
@@ -20,7 +20,7 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     /// <summary>
     /// The value to be entered at the position when executing the procedure
     /// </summary>
-    public object Value { get; set; }
+    public JsonElement Value { get; set; }
     /// <summary>
     /// Specify the type of value(s) provided
     /// </summary>
@@ -53,16 +53,6 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
       {
         Position = position,
         Output = true
-      };
-    
-    public Parameter RedactCopy()
-      => new Parameter
-      {
-        Position = this.Position,
-        Label = this.Label,
-        Output = this.Output,
-        Value = "***",
-        Redact = true
       };
   }
 }

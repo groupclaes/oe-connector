@@ -17,14 +17,16 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
 
     private readonly ILogger<OpenEdgeHub> logger;
     private readonly IOpenEdge openEdge;
+    private readonly IParameterService parameterService;
 
     private readonly ConcurrentDictionary<string, ProcedureGroup> procedureTimers;
     private bool IsTesting { get => (bool)Context.Items[IsTest]; }
 
-    public OpenEdgeHub(ILogger<OpenEdgeHub> logger, IOpenEdge openEdge)
+    public OpenEdgeHub(ILogger<OpenEdgeHub> logger, IOpenEdge openEdge, IParameterService parameterService)
     {
       this.logger = logger;
       this.openEdge = openEdge;
+      this.parameterService = parameterService;
       this.procedureTimers = new ConcurrentDictionary<string, ProcedureGroup>();
     }
 
@@ -38,9 +40,9 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
 
     public async Task ExecuteProcedure(ProcedureRequest request)
     {
-      bool hasRedacted = openEdge.GetFilteredParameters(request, out Parameter[] displayeableFilters, out string parameterHash);
+      Parameter[] displayeableParameters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
       logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@Parameters}",
-        Context.ConnectionId, request.Procedure, hasRedacted ? displayeableFilters : request.Parameters);
+        Context.ConnectionId, request.Procedure, hasRedacted ? displayeableParameters : request.Parameters);
 
       if (!hasRedacted && request.Cache > 0)
       {
@@ -59,9 +61,9 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
 
     public async Task<ProcedureResponse> GetProcedure(ProcedureRequest request)
     {
-      bool hasRedacted = openEdge.GetFilteredParameters(request, out Parameter[] displayeableFilters, out string parameterHash);
+      Parameter[] displayeableParameters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
       logger.LogInformation("{Connection}: Received procedure retrieval request for {Procedure} using {@Parameters}",
-        Context.ConnectionId, request.Procedure, hasRedacted ? displayeableFilters : request.Parameters);
+        Context.ConnectionId, request.Procedure, hasRedacted ? displayeableParameters : request.Parameters);
       
       // Get procedure response.
       // If has none redacted and has a cache, send to all current subscribers/awaiting people

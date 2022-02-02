@@ -486,6 +486,7 @@ MigrationBackup/
 
 
 .DS_Store
+log-**.txt
 
 
 

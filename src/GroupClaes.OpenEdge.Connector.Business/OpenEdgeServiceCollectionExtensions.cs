@@ -9,6 +9,10 @@ namespace GroupClaes.OpenEdge.Connector.Business
     {
       return collection.AddSingleton<IChecksumService, ChecksumService>()
         .AddSingleton<IProxyProvider, ProxyProvider>()
+        .AddSingleton<IProcedureParser, ProcedureParser>()
+        .AddSingleton<IJsonSerializer, JsonSerializer>()
+        .AddSingleton<IParameterService, ParameterService>()
+        .AddSingleton<TracerLogger>()
         .AddScoped<IOpenEdge, OpenEdge>();
     }
   }

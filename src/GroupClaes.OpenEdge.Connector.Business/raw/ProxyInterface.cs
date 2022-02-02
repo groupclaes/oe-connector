@@ -3,6 +3,7 @@ using Progress.Open4GL;
 using Progress.Open4GL.DynamicAPI;
 using Progress.Open4GL.Exceptions;
 using Progress.Open4GL.Proxy;
+using System;
 
 namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
@@ -31,6 +32,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       }
 
       initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
+      connection.ReleaseConnection();
     }
 
     public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed)
@@ -42,12 +44,20 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     public virtual RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema)
       => base.runProcedure(requestID, procName, params_Renamed, schema);
 
-    public new virtual void Dispose()
+    public new void Dispose()
     {
       if (!disposed)
       {
+        disposed = true;
+
+        logger.LogTrace("Disposing ProxyInterface");
+        connection.ReleaseConnection();
         base.Dispose();
+        logger.LogTrace("Disposed ProxyInterface");
+        logger.LogTrace("Disposing Connection");
         connection.Dispose();
+        logger.LogTrace("Disposed Connection");
+        GC.WaitForPendingFinalizers();
       }
     }
   }

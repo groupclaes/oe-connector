@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using GroupClaes.OpenEdge.Connector.Shared;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Progress.Open4GL.Proxy;
@@ -9,17 +10,18 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
   internal class ProxyProvider : IProxyProvider
   {
     private readonly ILogger<ProxyProvider> logger;
+
     private readonly IConfigurationSection configurationSection;
     private readonly IServiceProvider serviceProvider;
     public ProxyProvider(ILogger<ProxyProvider> logger, IConfiguration configuration, IServiceProvider serviceProvider)
     {
       this.logger = logger;
+
       configurationSection = configuration.GetSection("OpenEdge");
       this.serviceProvider = serviceProvider;
     }
 
     public IProxyInterface CreateProxyInstance()
-
       => CreateProxyInstance(Constants.DefaultOpenEdgeEndpoint, null, null, null);
 
     public IProxyInterface CreateProxyInstance(string appServer)
@@ -33,12 +35,15 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     {
       AppServerConfig config = GetAppServerConfig(appServer);
 
+      SetTraceLogger();
       Connection connection = new Connection(config.Endpoint,
         userId ?? config.Username,
         password ?? config.Password,
         appServerInfo ?? config.AppId);
 
-      logger.LogDebug("Retrieved app server config for {Config.Endpoint} with appId {Config.AppId} using {Config.Username}", config.Endpoint, config.AppId, config.Username);
+      config.Password = null;
+
+      logger.LogDebug("Retrieved app server config for {Endpoint} with config {@Config}", config.Endpoint, config);
 
       return new ProxyInterface(GetLogger<PrefixedProxyInterface>(), connection);
     }
@@ -47,6 +52,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     {
       AppServerConfig config = GetAppServerConfig(appServer);
 
+      SetTraceLogger();
       Connection connection = new Connection(config.Endpoint,
         userId ?? config.Username,
         password ?? config.Password,
@@ -67,5 +73,11 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     private ILogger<T> GetLogger<T>() where T : IProxyInterface
       => serviceProvider.GetRequiredService<ILogger<T>>();
+
+    private void SetTraceLogger()
+    {
+      var traceLogger = serviceProvider.GetRequiredService<TracerLogger>();
+      Progress.Open4GL.RunTimeProperties.tracer.startTrace(traceLogger, 0, "O4GL ", "Trace");
+    }
   }
 }

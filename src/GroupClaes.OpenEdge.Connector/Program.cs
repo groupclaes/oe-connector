@@ -22,7 +22,8 @@ namespace GroupClaes.OpenEdge.Connector
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-#if !DEBUG
+                .WriteTo.File(string.Format("log-{0}.txt", DateTime.Now.ToString("yyyy-MM-dd--HH-mm")))
+#if !DEBUG && false
                 .WriteTo.Elasticsearch(ConfigureElasticSink(context.Configuration))
 #endif
             )
