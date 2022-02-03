@@ -50,7 +50,6 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
         logger.LogTrace("Disposing ProxyInterface");
         base.Dispose(disposing);
-        GC.SuppressFinalize(this);
         logger.LogTrace("Disposed ProxyInterface");
         logger.LogTrace("Disposing Connection");
         connection.Dispose();
