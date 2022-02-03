@@ -32,7 +32,6 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       }
 
       initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
-      connection.ReleaseConnection();
     }
 
     public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed)
@@ -44,21 +43,21 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     public virtual RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema)
       => base.runProcedure(requestID, procName, params_Renamed, schema);
 
-    public new void Dispose()
+    protected override void Dispose(bool disposing)
     {
-      if (!disposed)
+      if (disposing)
       {
-        disposed = true;
 
         logger.LogTrace("Disposing ProxyInterface");
-        connection.ReleaseConnection();
-        base.Dispose();
+        base.Dispose(disposing);
+        GC.SuppressFinalize(this);
         logger.LogTrace("Disposed ProxyInterface");
         logger.LogTrace("Disposing Connection");
         connection.Dispose();
         logger.LogTrace("Disposed Connection");
-        GC.WaitForPendingFinalizers();
       }
+
+      disposed = true;
     }
   }
 }

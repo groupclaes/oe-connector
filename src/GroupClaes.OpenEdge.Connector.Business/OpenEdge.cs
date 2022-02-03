@@ -17,18 +17,14 @@ namespace GroupClaes.OpenEdge.Connector.Business
 {
   internal class OpenEdge : IOpenEdge
   {
-    private const string CachePathPrefix = "OpenEdge:Procedures:";
-
-    //private readonly IDistributedCache cache;
     protected readonly ILogger<OpenEdge> logger;
     protected readonly IParameterService parameterService;
     protected readonly IProcedureParser procedureParser;
     protected readonly IProxyProvider proxyProvider;
 
-    public OpenEdge(/*IDistributedCache cache, */ILogger<OpenEdge> logger, IProxyProvider proxyProvider,
+    public OpenEdge(ILogger<OpenEdge> logger, IProxyProvider proxyProvider,
       IParameterService parameterService, IProcedureParser procedureParser)
     {
-      //this.cache = cache;
       this.logger = logger;
       this.parameterService = parameterService;
       this.procedureParser = procedureParser;
@@ -82,75 +78,9 @@ namespace GroupClaes.OpenEdge.Connector.Business
     public virtual async Task<byte[]> ExecuteProcedureAsync(ProcedureRequest request, string parameterHash = null,
       bool isTest = false, CancellationToken cancellationToken = default)
     {
-#if DEBUG
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
-#endif
-#if false
-      if (request.Cache < 1)
-      {
-#endif
         logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
         ProcedureResponse response = await GetProcedureResponse(request, cancellationToken);
         return procedureParser.GetProcedureResponseBytes(response);
-#if false
-      }
-      else
-      {
-        byte[] rawData = null;
-        string cacheName = GetCachedKey(request.Procedure, parameterHash);
-        logger.LogDebug("Attempting to fetch cached response for {Procedure}", request.Procedure);
-        try
-        {
-          rawData = await cache.GetAsync(cacheName, cancellationToken)
-            .ConfigureAwait(false);
-        }
-        catch (Exception ex) when (!(ex is OperationCanceledException))
-        {
-          logger.LogError(ex, "Couldn't fetch cached response for {Procedure}", request.Procedure);
-        }
-
-        if (rawData != null)
-        {
-          logger.LogInformation("Cache result {Found} for {Procedure}", "HIT", request.Procedure);
-#if DEBUG
-          stopwatch.Stop();
-          logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
-#endif
-          return rawData;
-        }
-        else
-        {
-          logger.LogTrace("Executing {Procedure} on OpenEdge", request.Procedure);
-          ProcedureResponse result = await GetProcedureResponse(request, cancellationToken)
-            .ConfigureAwait(false);
-          logger.LogTrace("Executed {Procedure} on OpenEdge, result {@result}", request.Procedure, result);
-          if (request.Cache > 0)
-          {
-            logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
-
-            result.LastModified = DateTime.UtcNow;
-            rawData = GetProcedureResponseBytes(result);
-
-            _ = cache.SetAsync(cacheName, rawData,
-              new DistributedCacheEntryOptions {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(request.Cache)
-              }, cancellationToken).ConfigureAwait(false);
-          }
-          else
-          {
-            rawData = GetProcedureResponseBytes(result);
-          }
-
-          logger.LogInformation("Cache result {Found} for {Procedure}", "MISS", request.Procedure);
-#if DEBUG
-          stopwatch.Stop();
-          logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
-#endif
-          return rawData;
-        }
-      }
-#endif
     }
     public async Task<ProcedureResponse> GetProcedureAsync(ProcedureRequest request,
       string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
@@ -159,63 +89,18 @@ namespace GroupClaes.OpenEdge.Connector.Business
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
 #endif
-#if false
-      if (request.Cache < 1)
-      {
-#endif
-        logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
-        return await GetProcedureResponse(request, cancellationToken)
-            .ConfigureAwait(false);
-#if false
-    }
-      else
-      {
-        string cacheName = GetCachedKey(request.Procedure, parameterHash);
-        logger.LogDebug("Attempting to fetch cached response for {Procedure}", request.Procedure);
-        byte[] rawData = await cache.GetAsync(cacheName, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (rawData != null)
-        {
-          logger.LogInformation("Cache result {Found} for {Procedure}", "HIT", request.Procedure);
+      logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
+      ProcedureResponse response = await GetProcedureResponse(request, cancellationToken)
+        .ConfigureAwait(false);
 #if DEBUG
-          stopwatch.Stop();
-          logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
+      stopwatch.Stop();
+      logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
 #endif
-          return GetProcedureFromBytes(rawData);
-        }
-        else
-        {
-          logger.LogTrace("Executing {Procedure} on OpenEdge", request.Procedure);
-          ProcedureResponse result = await GetProcedureResponse(request, cancellationToken)
-            .ConfigureAwait(false);
-          logger.LogTrace("Executed {Procedure} on OpenEdge, result {@result}", request.Procedure, result);
 
-          if (request.Cache > 0)
-          {
-            logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
-
-            result.LastModified = DateTime.UtcNow;
-            rawData = GetProcedureResponseBytes(result);
-
-            _ = cache.SetAsync(cacheName, rawData,
-              new DistributedCacheEntryOptions {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(request.Cache)
-              }, cancellationToken).ConfigureAwait(false);
-          }
-
-          logger.LogInformation("Cache result {Found} for {Procedure}", "MISS", request.Procedure);
-#if DEBUG
-          stopwatch.Stop();
-          logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
-#endif
-          return result;
-        }
-      }
-#endif
+      return response;
     }
 
-    private Task<ProcedureResponse> GetProcedureResponse(ProcedureRequest request, CancellationToken cancellationToken)
+    protected Task<ProcedureResponse> GetProcedureResponse(ProcedureRequest request, CancellationToken cancellationToken)
     {
       return Task.Run(async () =>
       {
@@ -259,21 +144,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
         return response;
       }, cancellationToken);
-    }
-    /// <summary>
-    /// Get the cache key based upon the procedure and the parameter hash
-    /// </summary>
-    /// <param name="requestProcedure">Procedure name to include in the key</param>
-    /// <param name="parameterHash">Parameter hash to differentiate requested datas</param>
-    /// <returns>The key to be used to access from the cache</returns>
-    internal static string GetCachedKey(string requestProcedure, string parameterHash)
-    {
-      if (!string.IsNullOrEmpty(parameterHash))
-      {
-        return $"{CachePathPrefix}{requestProcedure}:{parameterHash}";
-      }
-
-      return $"{CachePathPrefix}{requestProcedure}";
     }
 
     private async Task ExecuteProcedureOnCorrectProxyInterface(ProcedureRequest request, ParameterSet parameters,
