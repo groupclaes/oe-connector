@@ -25,7 +25,8 @@ namespace GroupClaes.OpenEdge.Connector
       services.AddStackExchangeRedisCache(options =>
         options.Configuration = Configuration["Redis:ConnectionString"]);
 
-      services.AddOpenEdge();
+      bool redisEnabled = Configuration.GetValue("Redis:Enabled", false);
+      services.AddOpenEdge(redisEnabled);
 
       services.AddControllers();
       services.AddLogging(opt =>
