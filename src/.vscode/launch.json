@@ -10,7 +10,7 @@
       "request": "launch",
       "preLaunchTask": "build",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/GroupClaes.OpenEdge.Connector/bin/Debug/net5.0/GroupClaes.OpenEdge.Connector.dll",
+      "program": "${workspaceFolder}/GroupClaes.OpenEdge.Connector/bin/Debug/net6.0/GroupClaes.OpenEdge.Connector.dll",
       "args": [],
       "cwd": "${workspaceFolder}/GroupClaes.OpenEdge.Connector",
       "stopAtEntry": false,
