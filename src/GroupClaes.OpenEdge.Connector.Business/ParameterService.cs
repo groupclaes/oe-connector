@@ -53,6 +53,10 @@ namespace GroupClaes.OpenEdge.Connector.Business
             hasRedacted = true;
           }
         }
+        else
+        {
+          hashBuilder.Append(parameter.ForceArray ? "1": "0");
+        }
       }
 
       parameterHash = hashBuilder.Length > 0 ? checksumService.Generate(hashBuilder) : null;
