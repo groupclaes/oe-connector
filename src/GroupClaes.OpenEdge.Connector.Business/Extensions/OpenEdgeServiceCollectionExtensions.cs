@@ -1,7 +1,7 @@
 using GroupClaes.OpenEdge.Connector.Business.Raw;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GroupClaes.OpenEdge.Connector.Business
+namespace GroupClaes.OpenEdge.Connector.Business.Extensions
 {
   public static class OpenEdgeServiceCollectionExtensions
   {

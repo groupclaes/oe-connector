@@ -1,4 +1,4 @@
-using GroupClaes.OpenEdge.Connector.Business;
+using GroupClaes.OpenEdge.Connector.Business.Extensions;
 using GroupClaes.OpenEdge.Connector.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -57,6 +57,10 @@ namespace GroupClaes.OpenEdge.Connector
       app.UseRouting();
 
       app.UseAuthorization();
+
+#if DEBUG 
+      app.UseRequestDebugging();
+#endif
 
       app.UseEndpoints(endpoints =>
       {

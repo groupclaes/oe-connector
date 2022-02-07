@@ -70,9 +70,8 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
       catch (Exception ex)
       {
         logger.LogError(ex, "Couldn't execute and retrieve procedure {Procedure}", request.Procedure);
+        return StatusCode(500);
       }
-
-      return StatusCode(500);
     }
   }
 }
