@@ -1,5 +1,7 @@
 version: "3.9"
 services:
+  oe-cache:
+    image: "redis:alpine"
   oe-connector:
     image: 'docker-registry.groupclaes.be/groupclaes_oe-connector'
     ports:
