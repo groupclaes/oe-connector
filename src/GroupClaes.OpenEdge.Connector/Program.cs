@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -22,8 +21,7 @@ namespace GroupClaes.OpenEdge.Connector
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-                .WriteTo.File(string.Format("log-{0}.txt", DateTime.Now.ToString("yyyy-MM-dd--HH-mm")))
-#if !DEBUG && false
+#if !DEBUG
                 .WriteTo.Elasticsearch(ConfigureElasticSink(context.Configuration))
 #endif
             )

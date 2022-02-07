@@ -69,12 +69,20 @@ namespace GroupClaes.OpenEdge.Connector.Business
         throw new OpenEdgeRefusedException(ex);
       }
       catch (Exception ex)
-        when(!(ex is OpenEdgeTimeoutException))
+        when(ex is not OpenEdgeTimeoutException)
       {
         logger.LogError(ex, "An unhandled exception occurred when executing procedure {Procedure}", request.Procedure);
         throw;
       }
     }
+    /// <summary>
+    /// Execute the procedure and retrieve the raw bytes of the json parsed string
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="parameterHash"></param>
+    /// <param name="isTest"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public virtual async Task<byte[]> ExecuteProcedureAsync(ProcedureRequest request, string parameterHash = null,
       bool isTest = false, CancellationToken cancellationToken = default)
     {
@@ -82,6 +90,14 @@ namespace GroupClaes.OpenEdge.Connector.Business
         ProcedureResponse response = await GetProcedureResponse(request, cancellationToken);
         return procedureParser.GetProcedureResponseBytes(response);
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="parameterHash"></param>
+    /// <param name="isTest"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ProcedureResponse> GetProcedureAsync(ProcedureRequest request,
       string parameterHash = null, bool isTest = false, CancellationToken cancellationToken = default)
     {

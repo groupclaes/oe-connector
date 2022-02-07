@@ -58,9 +58,12 @@ namespace GroupClaes.OpenEdge.Connector.Business
       {
         oeResult = await cache.GetAsync(cacheName, cancellationToken)
           .ConfigureAwait(false);
-        logger.LogInformation("Cache result {Found} for {Procedure}: {ParameterHash}", "HIT",
-          request.Procedure, parameterHash);
-        return oeResult;
+        if (oeResult != null)
+        {
+          logger.LogInformation("Cache result {Found} for {Procedure}: {ParameterHash}", "HIT",
+            request.Procedure, parameterHash);
+          return oeResult;
+        }
       }
       catch (Exception ex) when (ex is not OperationCanceledException)
       {

@@ -2,8 +2,7 @@
 using Progress.Open4GL;
 using Progress.Open4GL.DynamicAPI;
 using Progress.Open4GL.Exceptions;
-using Progress.Open4GL.Proxy;
-using System;
+using Progress.Open4GL.Proxy; 
 
 namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
@@ -47,7 +46,6 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     {
       if (disposing)
       {
-
         logger.LogTrace("Disposing ProxyInterface");
         base.Dispose(disposing);
         logger.LogTrace("Disposed ProxyInterface");
