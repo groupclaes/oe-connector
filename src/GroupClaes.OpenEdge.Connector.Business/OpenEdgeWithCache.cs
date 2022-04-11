@@ -95,12 +95,12 @@ namespace GroupClaes.OpenEdge.Connector.Business
     internal Task WriteProcedureResponseToCache(string cacheName, ProcedureRequest request,
       byte[] resultBytes, CancellationToken cancellationToken = default)
     {
-      logger.LogDebug("Caching {Procedure} response for {Expire} seconds", request.Procedure, request.Cache);
+      logger.LogDebug("Caching {Procedure} response for {Expire} milliseconds", request.Procedure, request.Cache);
 
       return cache.SetAsync(cacheName, resultBytes,
         new DistributedCacheEntryOptions
         {
-          AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(request.Cache)
+          AbsoluteExpirationRelativeToNow = TimeSpan.FromMilliseconds(request.Cache)
         }, cancellationToken);
     }
 
