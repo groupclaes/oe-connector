@@ -14,7 +14,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
     /// <param name="hasRedacted"></param>
     /// <param name="parameterHash"></param>
     /// <returns></returns>
-    Parameter[] GetFilteredParameters(IEnumerable<Parameter> requestParameters,
+    DisplayableParameter[] GetFilteredParameters(IEnumerable<Parameter> requestParameters,
       out bool hasRedacted, out string parameterHash);
     /// <summary>
     /// 

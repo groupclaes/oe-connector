@@ -4,14 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using GroupClaes.OpenEdge.Connector.Business.Extensions;
-using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
+using Microsoft.Extensions.Logging;
 using Progress.Open4GL.DynamicAPI;
 
 namespace GroupClaes.OpenEdge.Connector.Business
 {
   internal class ParameterService : IParameterService
   {
+    private readonly static Encoding MemPointerEncoding = Encoding.ASCII;
+
     private readonly IChecksumService checksumService;
     private readonly IJsonSerializer jsonSerializer;
 
@@ -21,27 +23,36 @@ namespace GroupClaes.OpenEdge.Connector.Business
       this.jsonSerializer = jsonSerializer;
     }
 
-    public Parameter[] GetFilteredParameters(IEnumerable<Parameter> requestParameters,
+    public DisplayableParameter[] GetFilteredParameters(IEnumerable<Parameter> requestParameters,
       out bool hasRedacted, out string parameterHash)
     {
       hasRedacted = false;
-      if (requestParameters.Count() == 0)
+      if (requestParameters == null || requestParameters.Count() == 0)
       {
         parameterHash = null;
-        return Array.Empty<Parameter>();
+        return Array.Empty<DisplayableParameter>();
       }
 
-      Parameter[] parameters = requestParameters
+      DisplayableParameter[] parameters = requestParameters
         .OrderBy(x => x.Position)
-        .ToArray();
+        .Select(x => new DisplayableParameter
+        {
+          Label = x.Label,
+          Output = x.Output,
+          Position = x.Position,
+          Type = x.Type,
+          Redact = x.Redact,
+          Value = (x.Value.ValueKind == JsonValueKind.Undefined || x.Value.ValueKind ==  JsonValueKind.Null) ?
+            null : x.Value.GetRawText()
+        }).ToArray();
       StringBuilder hashBuilder = new StringBuilder(requestParameters.Count() * 64);
-      Parameter parameter;
+      DisplayableParameter parameter;
       for (int i = 0; i < parameters.Length; i++)
       {
         parameter = parameters[i];
         if (!parameter.Output)
         {
-          if (parameter.Value.ValueKind != JsonValueKind.Null)
+          if (parameter.Value == null)
           {
             hashBuilder.Append(parameter.Position);
             hashBuilder.Append(parameter.Value);
@@ -49,7 +60,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
           if (parameter.Redact)
           {
-            parameters[i] = RedactParameter(parameter);
+            parameters[i].Value = "***";
             hasRedacted = true;
           }
         }
@@ -60,7 +71,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       }
 
       parameterHash = hashBuilder.Length > 0 ? checksumService.Generate(hashBuilder) : null;
-      return parameters;
+      return parameters.ToArray();
     }
 
     public object ExtractAndParseValue(Parameter parameter, ParameterSet parameterSet)
@@ -110,7 +121,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
           int inputOutputType = parameter.Output ? ParameterSet.OUTPUT : ParameterSet.INPUT;
           if (!parameter.Output && parameter.Type == ParameterType.JSON)
           {
-            byte[] valueArray = jsonSerializer.SerializeToBytes(parameter.Value);
+            byte[] valueArray = jsonSerializer.SerializeToBytes(parameter.Value, MemPointerEncoding);
+
             parameterSet.setParameter(parameter.Position, new Progress.Open4GL.Memptr(valueArray), inputOutputType,
               parameter.GetParameterSetType(), false, 0, null);
           }
@@ -178,18 +190,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
       }
 
       return outputsDictionary;
-    }
-
-    public Parameter RedactParameter(Parameter parameter)
-    {
-      return new Parameter
-      {
-        Position = parameter.Position,
-        Label = parameter.Label,
-        Output = parameter.Output,
-        Value = jsonSerializer.ParseJsonElement("***"),
-        Redact = true
-      };
     }
   }
 }

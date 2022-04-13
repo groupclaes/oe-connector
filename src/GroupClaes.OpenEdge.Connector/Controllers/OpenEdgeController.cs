@@ -9,6 +9,7 @@ using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace GroupClaes.OpenEdge.Connector.Controllers
 {
@@ -51,8 +52,8 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
 #endif
-        Parameter[] displayeableFilters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
-        logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@Parameters}",
+        DisplayableParameter[] displayeableFilters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
+        logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@InputParameter}",
           HttpContext.Connection.Id, request.Procedure, displayeableFilters);
 
         byte[] response = await openEdge.ExecuteProcedureWithTimeoutAsync(request, parameterHash, test, HttpContext.RequestAborted)

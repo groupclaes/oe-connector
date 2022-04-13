@@ -31,6 +31,14 @@ namespace GroupClaes.OpenEdge.Connector.Business
     /// <returns>A json UTF-8 byte array serialized from the model</returns>
     byte[] SerializeToBytes<T>(T value);
     /// <summary>
+    /// Serialize an object of type T to a UTF-8 json byte array
+    /// </summary>
+    /// <typeparam name="T">Modeltype to parse from</typeparam>
+    /// <param name="value">Model to be parsed</param>
+    /// <param name="encoding">Encoding to encode the UTF8 JSON array to</param>
+    /// <returns>A json byte array serialized from the model encoded into the desired encoding</returns>
+    byte[] SerializeToBytes<T>(T value, Encoding encoding);
+    /// <summary>
     /// Convert a value to a json element
     /// </summary>
     /// <typeparam name="T">Valuetype  to be converted</typeparam>

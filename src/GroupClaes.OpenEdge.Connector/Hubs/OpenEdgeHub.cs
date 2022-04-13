@@ -40,7 +40,7 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
 
     public async Task ExecuteProcedure(ProcedureRequest request)
     {
-      Parameter[] displayeableParameters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
+      DisplayableParameter[] displayeableParameters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
       logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@Parameters}",
         Context.ConnectionId, request.Procedure, hasRedacted ? displayeableParameters : request.Parameters);
 
@@ -61,7 +61,7 @@ namespace GroupClaes.OpenEdge.Connector.Hubs
 
     public async Task<ProcedureResponse> GetProcedure(ProcedureRequest request)
     {
-      Parameter[] displayeableParameters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
+      DisplayableParameter[] displayeableParameters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
       logger.LogInformation("{Connection}: Received procedure retrieval request for {Procedure} using {@Parameters}",
         Context.ConnectionId, request.Procedure, hasRedacted ? displayeableParameters : request.Parameters);
       
