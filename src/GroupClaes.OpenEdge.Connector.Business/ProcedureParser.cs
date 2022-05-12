@@ -27,6 +27,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
           if (returnCode.Length == 3)
           {
             result.Description = returnCode[2];
+          } else if (returnCode.Length == 2) {
+            result.Description = returnCode[1];
           }
 
           return result;

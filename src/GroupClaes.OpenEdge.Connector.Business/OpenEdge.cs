@@ -147,6 +147,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           && parameters.ProcedureReturnValue is string returnValue
           && !string.IsNullOrWhiteSpace(returnValue))
         {
+          logger.LogDebug("{@ProcedureReturnValue}", parameters.ProcedureReturnValue);
           ProcedureResult procedureResult = procedureParser.GetProcedureResult(returnValue);
           if (procedureResult == null)
           {
