@@ -27,7 +27,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       out bool hasRedacted, out string parameterHash)
     {
       hasRedacted = false;
-      if (requestParameters == null || requestParameters.Count() == 0)
+      if (requestParameters == null || !requestParameters.Any())
       {
         parameterHash = null;
         return Array.Empty<DisplayableParameter>();
@@ -50,17 +50,17 @@ namespace GroupClaes.OpenEdge.Connector.Business
       for (int i = 0; i < parameters.Length; i++)
       {
         parameter = parameters[i];
+        hashBuilder.Append(parameter.Position);
         if (!parameter.Output)
         {
-          if (parameter.Value == null)
+          if (parameter.Value != null)
           {
-            hashBuilder.Append(parameter.Position);
             hashBuilder.Append(parameter.Value);
           }
 
           if (parameter.Redact)
           {
-            parameters[i].Value = "***";
+            parameter.Value = "***";
             hasRedacted = true;
           }
         }

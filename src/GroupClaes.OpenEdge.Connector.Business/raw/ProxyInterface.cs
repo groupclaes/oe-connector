@@ -44,14 +44,18 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     protected override void Dispose(bool disposing)
     {
-      if (disposing)
+      if (disposing && !disposed)
       {
+        base.CancelAllRequests();
+
         logger.LogTrace("Disposing ProxyInterface");
         base.Dispose(disposing);
         logger.LogTrace("Disposed ProxyInterface");
         logger.LogTrace("Disposing Connection");
         connection.Dispose();
         logger.LogTrace("Disposed Connection");
+        ProxyProvider.RemoveActiveProvider();
+        logger.LogCritical("Disposing ProxyInterface, Active Providers {ActiveProviders}", ProxyProvider.ActiveProviders);
       }
 
       disposed = true;

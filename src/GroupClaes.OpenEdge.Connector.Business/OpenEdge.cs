@@ -38,15 +38,16 @@ namespace GroupClaes.OpenEdge.Connector.Business
       {
         if (request.Timeout > 0)
         {
+          TimeSpan timeoutSpan =  TimeSpan.FromMilliseconds(
+                request.Timeout > Constants.TimeoutMaxLength
+                  ? Constants.TimeoutMaxLength : request.Timeout);
           try
           {
             Task<byte[]> procedureTask = ExecuteProcedureAsync(request, parameterHash, isTest,
               cancellationToken);
 
             return await procedureTask.WaitAsync(
-              TimeSpan.FromMilliseconds(
-                request.Timeout > Constants.TimeoutMaxLength
-                  ? Constants.TimeoutMaxLength : request.Timeout),
+              timeoutSpan,
               cancellationToken);
           }
           catch (Exception ex)
@@ -181,16 +182,19 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
       using (proxyInterface)
       {
-        using (Task procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters)))
+        Task<RqContext> procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters));
+  
+        // Check if the task has been cancelled.
+        while (!procedureTask.IsCompleted)
         {
-          // Check if the task has been cancelled.
-          while (!procedureTask.IsCompleted)
+          await Task.Delay(10);
+          if (cancellationToken.IsCancellationRequested)
           {
-            await Task.Delay(10, cancellationToken);
+            procedureTask.Result.Release();
+            proxyInterface.Dispose();
           }
         }
       }
-      cancellationToken.ThrowIfCancellationRequested();
     }
   }
 }
