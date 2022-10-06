@@ -29,5 +29,23 @@ namespace GroupClaes.OpenEdge.Connector.Shared.Models
     [RegularExpression(Regexes.PasswordString,
          ErrorMessage = "Password must be alphanumberic and may contain: -_@$!%*#?&")]
     public string Password { get; set; }
+    /// <summary>
+    /// Internal property?
+    /// </summary>
+    /// <value></value>
+    [JsonIgnore]
+    public string ProcedurePrefix { get; set; }
+    /// <summary>
+    /// Internal property?
+    /// </summary>
+    /// <value></value>
+    [JsonIgnore]
+    public string Endpoint { get; set; }
+    /// <summary>
+    /// Internal property?
+    /// </summary>
+    /// <value></value>
+    [JsonIgnore]
+    public string AppId { get; set; }
   }
 }

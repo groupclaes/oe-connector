@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using GroupClaes.OpenEdge.Connector.Business.Raw.Internal;
+using Microsoft.Extensions.Logging;
 using Progress.Open4GL;
 using Progress.Open4GL.DynamicAPI;
 using Progress.Open4GL.Exceptions;
@@ -12,9 +13,9 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     private new const int ProxyGenVersion = 1;
     private const int CurrentDynamicApiVersion = 5;
-    private readonly Connection connection;
+    internal readonly ProxyConnection connection;
 
-    public ProxyInterface(ILogger<ProxyInterface> logger, Connection connection)
+    public ProxyInterface(ILogger<ProxyInterface> logger, ProxyConnection connection)
     {
       this.connection = connection;
       this.logger = logger;
@@ -24,13 +25,13 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         throw new Open4GLException(base.WrongProxyVer, null);
       }
 
-      if (string.IsNullOrEmpty(connection.Url))
+      if (string.IsNullOrEmpty(connection.Connection.Url))
       {
         logger.LogWarning("Provided connection Url is empty, defaulting to ProxyRAW");
-        connection.Url = "ProxyRAW";
+        connection.Connection.Url = "ProxyRAW";
       }
 
-      initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
+      initAppObject("ProxyRAW", connection.Connection, RunTimeProperties.tracer, null, ProxyGenVersion);
     }
 
     public virtual RqContext RunProcedure(string procName, ParameterSet params_Renamed)
@@ -51,14 +52,8 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         logger.LogTrace("Disposing ProxyInterface");
         base.Dispose(disposing);
         logger.LogTrace("Disposed ProxyInterface");
-        logger.LogTrace("Disposing Connection");
-        connection.Dispose();
-        logger.LogTrace("Disposed Connection");
-        ProxyProvider.RemoveActiveProvider();
-        logger.LogCritical("Disposing ProxyInterface, Active Providers {ActiveProviders}", ProxyProvider.ActiveProviders);
+        disposed = true;
       }
-
-      disposed = true;
     }
   }
 }

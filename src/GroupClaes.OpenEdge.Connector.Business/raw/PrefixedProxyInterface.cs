@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using GroupClaes.OpenEdge.Connector.Business.Raw.Internal;
+using Microsoft.Extensions.Logging;
 using Progress.Open4GL.DynamicAPI;
 using Progress.Open4GL.Proxy;
 
@@ -7,7 +8,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
   internal sealed class PrefixedProxyInterface : ProxyInterface
   {
     private readonly string prefixPath;
-    public PrefixedProxyInterface(ILogger<PrefixedProxyInterface> logger, Connection connection, string prefixPath) : base(logger, connection)
+    public PrefixedProxyInterface(ILogger<PrefixedProxyInterface> logger, ProxyConnection connection, string prefixPath) : base(logger, connection)
     {
       if (!string.IsNullOrWhiteSpace(prefixPath))
       {

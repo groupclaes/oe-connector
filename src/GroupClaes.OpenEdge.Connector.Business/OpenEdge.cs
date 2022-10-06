@@ -10,7 +10,7 @@ using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Progress.Open4GL.DynamicAPI;
-
+using Progress.Open4GL.Exceptions;
 using static Progress.Open4GL.DynamicAPI.SessionPool;
 
 namespace GroupClaes.OpenEdge.Connector.Business
@@ -64,13 +64,13 @@ namespace GroupClaes.OpenEdge.Connector.Business
           return await ExecuteProcedureAsync(request, parameterHash, isTest, cancellationToken);
         }
       }
-      catch (NoAvailableSessionsException ex)
+      catch (OpenEdgeRefusedException ex)
       {
         logger.LogError(ex, "No available session, the connection was refused by open edge when executing procedure {Procedure}", request.Procedure);
-        throw new OpenEdgeRefusedException(ex);
+        throw;
       }
       catch (Exception ex)
-        when(ex is not OpenEdgeTimeoutException)
+        when(ex is not OpenEdgeException)
       {
         logger.LogError(ex, "An unhandled exception occurred when executing procedure {Procedure}", request.Procedure);
         throw;
@@ -166,35 +166,103 @@ namespace GroupClaes.OpenEdge.Connector.Business
     private async Task ExecuteProcedureOnCorrectProxyInterface(ProcedureRequest request, ParameterSet parameters,
       CancellationToken cancellationToken = default)
     {
-      IProxyInterface proxyInterface;
-      if (request.Credentials != null)
+      IProxyInterface proxyInterface = null;
+      try
       {
-        proxyInterface = proxyProvider.CreateProxyInstance(
-          request.Credentials.AppServer ?? Constants.DefaultOpenEdgeEndpoint,
-          request.Credentials.Username,
-          request.Credentials.Password,
-          null, null);
-      }
-      else
-      {
-        proxyInterface = proxyProvider.CreateProxyInstance();
-      }
-
-      using (proxyInterface)
-      {
-        Task<RqContext> procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters));
-  
-        // Check if the task has been cancelled.
-        while (!procedureTask.IsCompleted)
+        try 
         {
-          await Task.Delay(10);
-          if (cancellationToken.IsCancellationRequested)
-          {
-            procedureTask.Result.Release();
-            proxyInterface.Dispose();
-          }
+          proxyInterface = GetProxyInterface(request.Credentials);
+
+          await RunProcedureOnInterface(proxyInterface, request.Procedure,
+            parameters, cancellationToken);
+        }
+        catch (NoAvailableSessionsException ex)
+        {
+            ProcedureResult result = procedureParser.GetProcedureResult(
+              (ex as NoAvailableSessionsException).ProcReturnString);
+            if (result.StatusCode != 403)
+            {
+              logger.LogCritical(ex, "First execution attempt failed with reason: {Reason}, retrying with new proxy instance...", ex.ProcReturnString);
+              // Retry once
+              proxyInterface = GetProxyInterface(request.Credentials);
+
+              await RunProcedureOnInterface(proxyInterface, request.Procedure,
+                parameters, cancellationToken);
+            }
+            else
+            {
+              proxyProvider.CloseConnection(proxyInterface);
+              throw new OpenEdgeRefusedException(result, ex);
+            }
         }
       }
+      
+      catch (Open4GLException ex)
+        when (ex is ConnectException
+          || ex is SessionPoolException)
+      {
+        if (!string.IsNullOrWhiteSpace(ex.ProcReturnString))
+        {
+          ProcedureResult result = procedureParser.GetProcedureResult(
+            ex.ProcReturnString);
+
+          proxyProvider.CloseConnection(proxyInterface);
+          throw new OpenEdgeRefusedException(result, ex);
+        }
+
+
+        proxyProvider.CloseConnection(proxyInterface);
+        throw new OpenEdgeRefusedException(
+          new ProcedureResult
+          {
+            StatusCode = 500,
+            Title = "OpenEdge unavailable"
+          }, ex);
+      }
+      finally
+      {
+        if (proxyInterface != null)
+        {
+          proxyInterface.Dispose();
+        }
+      }
+    }
+
+    private async Task RunProcedureOnInterface(IProxyInterface proxyInterface, string procedure,
+      ParameterSet parameters, CancellationToken cancellationToken = default)
+    {
+      Task<RqContext> procedureTask = Task.Run(
+        () => proxyInterface.RunProcedure(procedure, parameters),
+        cancellationToken);
+
+      await procedureTask.WaitAsync(cancellationToken);
+
+      if (procedureTask.IsFaulted)
+      {
+        logger.LogError(procedureTask.Exception,
+          "Something went wrong when executing procedure task in proxy-interface {Procedure}",
+          procedure);
+        throw procedureTask.Exception;
+      }
+      else if (procedureTask.Result != null)
+      {
+        procedureTask.Result.Release();
+      }
+    }
+
+    private IProxyInterface GetProxyInterface(ProcedureCredentials credentials)
+    {
+      if (credentials == null)
+      {
+        return proxyProvider.CreateProxyInstance();
+      }
+
+      if (string.IsNullOrWhiteSpace(credentials.AppServer))
+      {
+        credentials.AppServer = Constants.DefaultOpenEdgeEndpoint;
+      }
+
+      return proxyProvider.CreateProxyInstance(credentials);
     }
   }
 }

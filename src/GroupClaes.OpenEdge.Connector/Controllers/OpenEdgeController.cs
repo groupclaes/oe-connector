@@ -19,12 +19,15 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
     private readonly ILogger<OpenEdgeController> logger;
     private readonly IOpenEdge openEdge;
     private readonly IParameterService parameterService;
+    private readonly IProcedureParser procedureParser;
 
-    public OpenEdgeController(ILogger<OpenEdgeController> logger, IOpenEdge openEdge, IParameterService parameterService)
+    public OpenEdgeController(ILogger<OpenEdgeController> logger, IOpenEdge openEdge,
+      IParameterService parameterService, IProcedureParser procedureParser)
     {
       this.logger = logger;
       this.openEdge = openEdge;
       this.parameterService = parameterService;
+      this.procedureParser = procedureParser;
     }
 
     [HttpPost("{procedure}/test")]
@@ -39,7 +42,8 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
     [ProducesResponseType(typeof(ProcedureResponse), 200)]
     [ProducesResponseType(408)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult> ExecuteProcedure([FromBody]ProcedureRequest request, string procedure, bool test = false)
+    public async Task<ActionResult> ExecuteProcedure([FromBody]ProcedureRequest request, string procedure, 
+      bool test = false)
     {
       if (!string.IsNullOrEmpty(procedure))
       {
@@ -52,12 +56,13 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
 #endif
-        DisplayableParameter[] displayeableFilters = parameterService.GetFilteredParameters(request.Parameters, out bool hasRedacted, out string parameterHash);
+        DisplayableParameter[] displayeableFilters = parameterService.GetFilteredParameters(request.Parameters,
+          out bool hasRedacted, out string parameterHash);
         logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@InputParameter}",
           HttpContext.Connection.Id, request.Procedure, displayeableFilters);
 
-        byte[] response = await openEdge.ExecuteProcedureWithTimeoutAsync(request, parameterHash, test, HttpContext.RequestAborted)
-          .ConfigureAwait(false);
+        byte[] response = await openEdge.ExecuteProcedureWithTimeoutAsync(request, parameterHash, test,
+          HttpContext.RequestAborted).ConfigureAwait(false);
 #if DEBUG
         stopwatch.Stop();
         logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
@@ -67,6 +72,10 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
       catch (OpenEdgeTimeoutException)
       {
         return StatusCode(408);
+      }
+      catch (OpenEdgeRefusedException ex)
+      {
+        return StatusCode(ex.Result.StatusCode, ex.Result);
       }
       catch (Exception ex)
       {
