@@ -180,7 +180,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
         {
             ProcedureResult result = procedureParser.GetProcedureResult(
               (ex as NoAvailableSessionsException).ProcReturnString);
-            if (result.StatusCode != 403)
+            if (result != null && result.StatusCode != 403)
             {
               logger.LogCritical(ex, "First execution attempt failed with reason: {Reason}, retrying with new proxy instance...", ex.ProcReturnString);
               // Retry once
