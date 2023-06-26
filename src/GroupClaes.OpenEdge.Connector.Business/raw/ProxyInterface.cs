@@ -50,9 +50,9 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         base.CancelAllRequests();
 
         logger.LogTrace("Disposing ProxyInterface");
+        disposed = true;
         base.Dispose(disposing);
         logger.LogTrace("Disposed ProxyInterface");
-        disposed = true;
       }
     }
   }

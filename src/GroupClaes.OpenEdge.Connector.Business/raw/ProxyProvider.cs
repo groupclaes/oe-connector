@@ -142,7 +142,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
           credentials.Endpoint,
           credentials.Username,
           credentials.Password,
-          config.AppId);
+          credentials.AppId);
 
         connection.WaitIfBusy = true;
 
@@ -176,7 +176,8 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
       if (string.IsNullOrWhiteSpace(credentials.AppId))
       {
-        credentials.AppId = config.AppId;
+        credentials.AppId = string.IsNullOrEmpty(config.AppId) ?
+          "default" : config.AppId;
       }
 
       if (string.IsNullOrWhiteSpace(credentials.Username)
