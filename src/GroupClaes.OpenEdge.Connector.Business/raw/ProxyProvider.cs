@@ -10,7 +10,8 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
   internal class ProxyProvider : IProxyProvider
   {
-    private const int MaxConnections = 2;
+    private const int MaxConnections = 10;
+    private const int MaxFailedAttempts = 5;
     internal static int ActiveProviders { get; private set; }
     internal static int FailedCount { get; private set; }
     private static SemaphoreSlim providerLock = new SemaphoreSlim(1);
@@ -136,7 +137,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       FailedCount++;
       providerLock.Release();
 
-      if (FailedCount > 5)
+      if (FailedCount > MaxFailedAttempts)
       {
         System.Diagnostics.Process.GetCurrentProcess().Kill();
       }
