@@ -10,8 +10,9 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 {
   internal class ProxyProvider : IProxyProvider
   {
-    private const int MaxConnections = 10;
+    private const int MaxConnections = 2;
     internal static int ActiveProviders { get; private set; }
+    internal static int FailedCount { get; private set; }
     private static SemaphoreSlim providerLock = new SemaphoreSlim(1);
 
     private readonly ILogger<ProxyProvider> logger;
@@ -38,25 +39,29 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     public IProxyInterface CreateProxyInstance(string appServer, string userId, string password,
       string appServerInfo)
     {
-      AppServerConfig config = GetAppServerConfig(appServer);
 
       SetTraceLogger();
-      Connection connection = new Connection(config.Endpoint,
-        userId ?? config.Username,
-        password ?? config.Password,
-        appServerInfo ?? config.AppId);
-
-      config.Password = null;
-
-      logger.LogDebug("Retrieved app server config for {Endpoint} with config {@Config}", config.Endpoint, config);
 
       if (ActiveProviders < MaxConnections)
       {
+        ResetFailedCount();
+        AppServerConfig config = GetAppServerConfig(appServer);
+
+        Connection connection = new Connection(config.Endpoint,
+          userId ?? config.Username,
+          password ?? config.Password,
+          appServerInfo ?? config.AppId);
+        config.Password = null;
+
+        logger.LogDebug("Retrieved app server config for {Endpoint} with config {@Config}", config.Endpoint, config);
+
         AddActiveProvider();
-        return new ProxyInterface(GetLogger<ProxyInterface>(), connection);
+        IProxyInterface proxyInterface = new ProxyInterface(GetLogger<ProxyInterface>(), connection);
+        return proxyInterface;
       }
       else
       {
+        AddFailedCount();
         throw new Exception("Active providers overreached");
       }
     }
@@ -66,20 +71,25 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       SetTraceLogger();
       if (ActiveProviders < MaxConnections)
       {
+        ResetFailedCount();
         AppServerConfig config = GetAppServerConfig(appServer);
         Connection connection = new Connection(config.Endpoint,
           userId ?? config.Username,
           password ?? config.Password,
           appServerInfo ?? config.AppId);
+        config.Password = null;
 
+        logger.LogDebug("Retrieved app server config for {Endpoint} with config {@Config}", config.Endpoint, config);
+
+        AddActiveProvider();
         IProxyInterface proxyInterface = new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(),
           connection, procedurePrefix ?? config.PathPrefix);
-        AddActiveProvider();
 
         return proxyInterface;
       }
       else
       {
+        AddFailedCount();
         throw new Exception("Active providers overreached");
       }
     }
@@ -118,6 +128,25 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       ActiveProviders--;
       
       providerLock.Release();
+    }
+
+    private static void AddFailedCount()
+    {
+      providerLock.Wait();
+      FailedCount++;
+      providerLock.Release();
+
+      if (FailedCount > 5)
+      {
+        System.Diagnostics.Process.GetCurrentProcess().Kill();
+      }
+    }
+
+    private static void ResetFailedCount()
+    {
+        providerLock.Wait();
+        FailedCount = 0;
+        providerLock.Release();
     }
   }
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
-version="net6.0"
+version="net7.0"
 configuration="Release"
-docker_tag="latest"
+docker_tag="test"
 docker_name="groupclaes_oe-connector"
 
 

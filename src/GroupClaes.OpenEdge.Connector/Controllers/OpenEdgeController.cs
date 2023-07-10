@@ -41,6 +41,11 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
     [ProducesResponseType(500)]
     public async Task<ActionResult> ExecuteProcedure([FromBody]ProcedureRequest request, string procedure, bool test = false)
     {
+      if (request == null)
+      {
+        return StatusCode(400);
+      }
+
       if (!string.IsNullOrEmpty(procedure))
       {
         request.Procedure = procedure;

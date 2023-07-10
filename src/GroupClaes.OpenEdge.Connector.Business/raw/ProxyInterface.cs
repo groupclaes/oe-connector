@@ -44,7 +44,12 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     protected override void Dispose(bool disposing)
     {
-      if (disposing && !disposed)
+      if (disposed)
+      {
+        return;
+      }
+
+      if (disposing)
       {
         base.CancelAllRequests();
 

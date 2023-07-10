@@ -109,6 +109,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       logger.LogInformation("Cache result {Found} for {Procedure}", "BYPASS", request.Procedure);
       ProcedureResponse response = await GetProcedureResponse(request, cancellationToken)
         .ConfigureAwait(false);
+
 #if DEBUG
       stopwatch.Stop();
       logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
