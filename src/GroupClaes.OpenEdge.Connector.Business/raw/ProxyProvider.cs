@@ -63,20 +63,20 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     public IProxyInterface CreateProxyInstance(string appServer, string userId, string password, string appServerInfo, string procedurePrefix)
     {
-      AppServerConfig config = GetAppServerConfig(appServer);
-
       SetTraceLogger();
-      Connection connection = new Connection(config.Endpoint,
-        userId ?? config.Username,
-        password ?? config.Password,
-        appServerInfo ?? config.AppId);
-
-
       if (ActiveProviders < MaxConnections)
       {
+        AppServerConfig config = GetAppServerConfig(appServer);
+        Connection connection = new Connection(config.Endpoint,
+          userId ?? config.Username,
+          password ?? config.Password,
+          appServerInfo ?? config.AppId);
+
+        IProxyInterface proxyInterface = new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(),
+          connection, procedurePrefix ?? config.PathPrefix);
         AddActiveProvider();
-        return new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(), connection,
-          procedurePrefix ?? config.PathPrefix);
+
+        return proxyInterface;
       }
       else
       {

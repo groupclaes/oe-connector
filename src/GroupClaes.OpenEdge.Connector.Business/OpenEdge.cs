@@ -182,7 +182,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
       using (proxyInterface)
       {
-        Task<RqContext> procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters));
+        Task<RqContext> procedureTask = Task.Run(() => proxyInterface.RunProcedure(request.Procedure, parameters),
+          cancellationToken);
   
         // Check if the task has been cancelled.
         while (!procedureTask.IsCompleted)
@@ -190,8 +191,11 @@ namespace GroupClaes.OpenEdge.Connector.Business
           await Task.Delay(10);
           if (cancellationToken.IsCancellationRequested)
           {
-            procedureTask.Result.Release();
-            proxyInterface.Dispose();
+            if (procedureTask.Result != null) 
+            {
+              procedureTask.Result.Release();
+            }
+            break;
           }
         }
       }

@@ -78,6 +78,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
     {
       // We have to get it out of the parameter set because Progress... Grrrrr....
       object value = parameterSet.getOutputParameter(parameter.Position);
+
       if (value is Progress.Open4GL.Memptr pointer)
       {
         if (parameter.Type == ParameterType.JSON)
