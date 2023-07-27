@@ -55,6 +55,10 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
     public byte[] GetProcedureResponseBytes(ProcedureResponse response)
     {
+      if (response is ProcedureErrorResponse errorResponse) {
+        return jsonSerializer.SerializeToBytes<ProcedureErrorResponse>(errorResponse);
+      }
+
       return jsonSerializer.SerializeToBytes(response);
     }
   }
