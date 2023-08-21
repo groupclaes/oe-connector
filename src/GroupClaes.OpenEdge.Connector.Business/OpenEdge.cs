@@ -151,11 +151,12 @@ namespace GroupClaes.OpenEdge.Connector.Business
           }
         }
 
+        Dictionary<string, object> outputsDictionary = parameterService.GetOutputParameters(request.Parameters, parameters);
+
         stopwatch.Stop();
         logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}",
           request.Procedure, stopwatch.ElapsedMilliseconds);
 
-        Dictionary<string, object> outputsDictionary = parameterService.GetOutputParameters(request.Parameters, parameters);
         ProcedureResponse response = new ProcedureResponse
         {
           Status = outputsDictionary.All(x => x.Value != null)
