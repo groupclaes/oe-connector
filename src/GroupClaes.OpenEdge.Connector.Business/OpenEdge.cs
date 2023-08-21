@@ -130,20 +130,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
         cancellationToken.ThrowIfCancellationRequested();
         await ExecuteProcedureOnCorrectProxyInterface(request, parameters, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        Dictionary<string, object> outputsDictionary = parameterService.GetOutputParameters(request.Parameters, parameters);
-
-        stopwatch.Stop();
-        logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}",
-          request.Procedure, stopwatch.ElapsedMilliseconds);
-
-        ProcedureResponse response = new ProcedureResponse
-        {
-          Status = outputsDictionary.All(x => x.Value != null)
-            ? 200 : 204,
-          Procedure = request.Procedure,
-          OriginTime = stopwatch.ElapsedMilliseconds,
-          Result = parameterService.GetParsedOutputs(outputsDictionary)
-        };
 
         if (parameters.ProcedureReturnValue != null
           && parameters.ProcedureReturnValue is string returnValue
@@ -156,9 +142,28 @@ namespace GroupClaes.OpenEdge.Connector.Business
           }
           else
           {
-            return procedureParser.GetErrorResponse(response, procedureResult);
+            stopwatch.Stop();
+            logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}",
+              request.Procedure, stopwatch.ElapsedMilliseconds);
+
+            return procedureParser.GetErrorResponse(500, request.Procedure,
+              stopwatch.ElapsedMilliseconds, procedureResult);
           }
         }
+
+        stopwatch.Stop();
+        logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}",
+          request.Procedure, stopwatch.ElapsedMilliseconds);
+
+        Dictionary<string, object> outputsDictionary = parameterService.GetOutputParameters(request.Parameters, parameters);
+        ProcedureResponse response = new ProcedureResponse
+        {
+          Status = outputsDictionary.All(x => x.Value != null)
+          ? 200 : 204,
+          Procedure = request.Procedure,
+          OriginTime = stopwatch.ElapsedMilliseconds,
+          Result = parameterService.GetParsedOutputs(outputsDictionary)
+        };
 
         return response;
       }, cancellationToken);

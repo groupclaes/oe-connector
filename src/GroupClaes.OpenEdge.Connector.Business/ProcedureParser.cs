@@ -53,6 +53,24 @@ namespace GroupClaes.OpenEdge.Connector.Business
       return errorResponse;
     }
 
+
+    public ProcedureErrorResponse GetErrorResponse(int status, string procedure, long originTime, ProcedureResult result)
+    {
+      ProcedureErrorResponse errorResponse = new ProcedureErrorResponse
+      {
+        Status = result.StatusCode,
+        Description = result.Description,
+        Title = result.Title,
+
+        Procedure = procedure,
+        LastModified = DateTime.UtcNow,
+        OriginTime = originTime,
+        Result = result
+      };
+
+      return errorResponse;
+    }
+
     public byte[] GetProcedureResponseBytes(ProcedureResponse response)
     {
       if (response is ProcedureErrorResponse errorResponse) {

@@ -17,12 +17,21 @@ namespace GroupClaes.OpenEdge.Connector.Business
     /// <returns>Null if an invalid value was given, or the parsed result if succeeded.</returns>
     ProcedureResult GetProcedureResult(string responseString);
     /// <summary>
-    /// Generate an error response from the provided ProcedureResponse and the ProcedureREsult data
+    /// Generate an error response from the provided ProcedureResponse and the ProcedureResult data
     /// </summary>
     /// <param name="response">Normal procedure response retrieved from OE</param>
     /// <param name="result">ProcedureResult parsed from the response value string</param>
     /// <returns>A parsed error response</returns>
     ProcedureErrorResponse GetErrorResponse(ProcedureResponse response, ProcedureResult result);
+    /// <summary>
+    /// Generate an error response from the provided ProcedureResponse and the ProcedureResult data
+    /// </summary>
+    /// <param name="status">StatusCode to return</param>
+    /// <param name="procedure">Executed procedure name</param>
+    /// <param name="originTime">Time taken to execute the procedure</param>
+    /// <param name="result">ProcedureResult parsed from the response value string</param>
+    /// <returns>A parsed error response</returns>
+    ProcedureErrorResponse GetErrorResponse(int status, string procedure, long originTime, ProcedureResult result);
     /// <summary>
     /// Parse the procedure response to a byte array
     /// </summary>
