@@ -61,8 +61,7 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
         logger.LogInformation("{Connection}: Received procedure execute request for {Procedure} using {@InputParameter}",
           HttpContext.Connection.Id, request.Procedure, displayeableFilters);
 
-        byte[] response = await openEdge.ExecuteProcedureWithTimeoutAsync(request, parameterHash, test, HttpContext.RequestAborted)
-          .ConfigureAwait(false);
+        byte[] response = await openEdge.ExecuteProcedureWithTimeoutAsync(request, parameterHash, test, HttpContext.RequestAborted);
 #if DEBUG
         stopwatch.Stop();
         logger.LogTrace("ExecuteProcedureAsync time taken: {ElapsedTime}", stopwatch.Elapsed);
@@ -76,7 +75,13 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
       catch (Exception ex)
       {
         logger.LogError(ex, "Couldn't execute and retrieve procedure {Procedure}", request.Procedure);
-        return StatusCode(500);
+        return StatusCode(500, new ProcedureErrorResponse
+        {
+          Status = 500,
+          Description = ex.Message,
+          Title = "OpenEdge error when executing procedure",
+          Procedure = request.Procedure
+        });
       }
     }
   }

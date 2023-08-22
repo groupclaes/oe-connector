@@ -22,7 +22,6 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
       }
     }
 
-
     public override RqContext RunProcedure(string procName, ParameterSet params_Renamed) 
       => base.runProcedure(GetPrefixPath(procName), params_Renamed);
 

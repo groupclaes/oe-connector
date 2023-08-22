@@ -72,8 +72,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
       }
 
       logger.LogTrace("Executing {Procedure} on OpenEdge", request.Procedure);
-      ProcedureResponse result = await GetProcedureResponse(request, cancellationToken)
-        .ConfigureAwait(false);
+      ProcedureResponse result = await GetProcedureResponse(request, cancellationToken);
       logger.LogTrace("Executed {Procedure} on OpenEdge, result {@result}", request.Procedure, result);
 
       result.LastModified = DateTime.UtcNow;

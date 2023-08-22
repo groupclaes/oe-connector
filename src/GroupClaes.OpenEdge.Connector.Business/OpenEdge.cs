@@ -140,7 +140,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
           {
             logger.LogError("Invalid ProcedureReturnValue provided: {ProcedureReturnValue}", returnValue);
           }
-          else
+          else if (procedureResult.StatusCode < 200 || procedureResult.StatusCode > 299)
           {
             stopwatch.Stop();
             logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}",
@@ -204,6 +204,10 @@ namespace GroupClaes.OpenEdge.Connector.Business
             }
             break;
           }
+        }
+
+        if (procedureTask.Exception != null) {
+          throw procedureTask.Exception;
         }
       }
     }
