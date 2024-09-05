@@ -9,7 +9,6 @@ using GroupClaes.OpenEdge.Connector.Shared;
 using GroupClaes.OpenEdge.Connector.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace GroupClaes.OpenEdge.Connector.Controllers
 {
