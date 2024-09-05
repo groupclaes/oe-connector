@@ -1,5 +1,5 @@
 #!/bin/bash
-version="net7.0"
+version="net8.0"
 configuration="Release"
 docker_tag="test"
 docker_name="oe-connector"

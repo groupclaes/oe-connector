@@ -43,11 +43,6 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     public virtual RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema)
       => base.runProcedure(requestID, procName, params_Renamed, schema);
 
-    public void Dispose()
-    {
-
-    }
-
     protected override void Dispose(bool disposing)
     {
       if (disposed)
