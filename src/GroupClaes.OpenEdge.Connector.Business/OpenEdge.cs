@@ -129,7 +129,6 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
         cancellationToken.ThrowIfCancellationRequested();
         await ExecuteProcedureOnCorrectProxyInterface(request, parameters, cancellationToken);
-        cancellationToken.ThrowIfCancellationRequested();
 
         if (parameters.ProcedureReturnValue != null
           && parameters.ProcedureReturnValue is string returnValue
@@ -195,18 +194,16 @@ namespace GroupClaes.OpenEdge.Connector.Business
         // Check if the task has been cancelled.
         while (!procedureTask.IsCompleted)
         {
-          await Task.Delay(10);
+          await Task.Delay(10, CancellationToken.None);
           if (cancellationToken.IsCancellationRequested)
           {
-            if (procedureTask.Result != null) 
-            {
-              procedureTask.Result.Release();
-            }
+            procedureTask.Result?.Release();
             break;
           }
         }
 
         if (procedureTask.Exception != null) {
+          procedureTask.Result?.Release();
           throw procedureTask.Exception;
         }
       }

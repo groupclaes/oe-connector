@@ -1,8 +1,8 @@
 #!/bin/bash
 version="net8.0"
 configuration="Release"
-docker_tag="test"
-docker_name="oe-connector"
+docker_tag="latest"
+docker_name="oe"
 
 
 cd "./GroupClaes.OpenEdge.Connector/"

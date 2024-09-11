@@ -16,8 +16,8 @@
 
     internal void SetConnectionString(string connectionString)
     {
-      if (!connectionString.StartsWith("appserver://"))
-        _endpoint = "appserver://" + connectionString;
+      if (!connectionString.StartsWith("http://"))
+        _endpoint = "http://" + connectionString;
       else
         _endpoint = connectionString;
     }

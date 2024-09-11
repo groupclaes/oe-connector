@@ -30,7 +30,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         connection.Url = "ProxyRAW";
       }
 
-      logger.LogTrace("Available sessions {AvailableSessionCount}", this.SessionPool.availableSessions());
+      //logger.LogTrace("Available sessions {AvailableSessionCount}", this.SessionPool.availableSessions());
       initAppObject("ProxyRAW", connection, RunTimeProperties.tracer, null, ProxyGenVersion);
     }
 
@@ -42,6 +42,12 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     public virtual RqContext RunProcedure(string requestID, string procName, ParameterSet params_Renamed, MetaSchema schema)
       => base.runProcedure(requestID, procName, params_Renamed, schema);
+
+    public new void Dispose()
+    {
+      logger.LogWarning("Disposing proxyinterface");
+      Dispose(true);
+    }
 
     protected override void Dispose(bool disposing)
     {
@@ -57,9 +63,9 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
         logger.LogTrace("Disposing ProxyInterface");
         base.Dispose(disposing);
         ProxyProvider.RemoveActiveProvider();
-        logger.LogCritical("Disposed ProxyInterface, Active Providers {ActiveProviders}, {AvailableSessions}, {PoolSize}",
-          ProxyProvider.ActiveProviders, this.SessionPool.availableSessions(),
-          this.SessionPool.size());
+        // logger.LogCritical("Disposed ProxyInterface, Active Providers {ActiveProviders}, {AvailableSessions}, {PoolSize}",
+        //   ProxyProvider.ActiveProviders, this.SessionPool.availableSessions(),
+        //   this.SessionPool.size());
       }
 
       disposed = true;
