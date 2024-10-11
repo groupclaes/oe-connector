@@ -12,7 +12,7 @@ namespace GroupClaes.OpenEdge.Connector.Business
 {
   internal class ParameterService : IParameterService
   {
-    private readonly static Encoding MemPointerEncoding = Encoding.ASCII;
+    private readonly static Encoding MemPointerEncoding = Encoding.UTF8;
 
     private readonly IChecksumService checksumService;
     private readonly IJsonSerializer jsonSerializer;

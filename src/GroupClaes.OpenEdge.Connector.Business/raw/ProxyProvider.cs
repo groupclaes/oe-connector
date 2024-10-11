@@ -117,7 +117,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     {
       providerLock.Wait();
   
-      ActiveProviders++;
+      // ActiveProviders++;
       logger.LogCritical("Creating ProxyInterface, Active Providers {ActiveProviders}", ProxyProvider.ActiveProviders);
 
       providerLock.Release();

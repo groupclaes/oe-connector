@@ -69,7 +69,13 @@ namespace GroupClaes.OpenEdge.Connector.Controllers
       }
       catch (OpenEdgeTimeoutException)
       {
-        return StatusCode(408);
+        return StatusCode(408, new ProcedureErrorResponse
+        {
+          Status = 408,
+          Description =  "Timeout exceeded",
+          Title = "OpenEdge error when executing procedure",
+          Procedure = request.Procedure
+        });
       }
       catch (Exception ex)
       {
