@@ -45,7 +45,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
       // if (ActiveProviders < MaxConnections)
       // {
-        ResetFailedCount();
+      //   ResetFailedCount();
         AppServerConfig config = GetAppServerConfig(appServer);
 
         Connection connection = new Connection(config.Endpoint,
@@ -56,7 +56,7 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
         logger.LogDebug("Retrieved app server config for {Endpoint} with config {@Config}", config.Endpoint, config);
 
-        AddActiveProvider();
+        // AddActiveProvider();
         IProxyInterface proxyInterface = new ProxyInterface(GetLogger<ProxyInterface>(), connection);
         return proxyInterface;
       // }
@@ -70,29 +70,22 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
     public IProxyInterface CreateProxyInstance(string appServer, string userId, string password, string appServerInfo, string procedurePrefix)
     {
       SetTraceLogger();
-      // if (ActiveProviders < MaxConnections)
-      // {
-        ResetFailedCount();
-        AppServerConfig config = GetAppServerConfig(appServer);
-        Connection connection = new Connection(config.Endpoint,
-          userId ?? config.Username,
-          password ?? config.Password,
-          appServerInfo ?? config.AppId);
-        config.Password = null;
+      //ResetFailedCount();
 
-        logger.LogDebug("Retrieved app server config for {Endpoint} with config {@Config}", config.Endpoint, config);
+      AppServerConfig config = GetAppServerConfig(appServer);
+      Connection connection = new Connection(config.Endpoint,
+        userId ?? config.Username,
+        password ?? config.Password,
+        appServerInfo ?? config.AppId);
+      config.Password = null;
 
-        AddActiveProvider();
-        IProxyInterface proxyInterface = new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(),
-          connection, procedurePrefix ?? config.PathPrefix);
+      logger.LogDebug("Retrieved app server config for {Endpoint} with config {@Config}", config.Endpoint, config);
 
-        return proxyInterface;
-      // }
-      // else
-      // {
-      //   AddFailedCount();
-      //   throw new Exception("Active providers overreached");
-      // }
+      //AddActiveProvider();
+      IProxyInterface proxyInterface = new PrefixedProxyInterface(GetLogger<PrefixedProxyInterface>(),
+        connection, procedurePrefix ?? config.PathPrefix);
+
+      return proxyInterface;
     }
 
     private AppServerConfig GetAppServerConfig(string appServer)
@@ -115,39 +108,39 @@ namespace GroupClaes.OpenEdge.Connector.Business.Raw
 
     private void AddActiveProvider()
     {
-      providerLock.Wait();
+      // providerLock.Wait();
   
       // ActiveProviders++;
-      logger.LogCritical("Creating ProxyInterface, Active Providers {ActiveProviders}", ProxyProvider.ActiveProviders);
+      // logger.LogCritical("Creating ProxyInterface, Active Providers {ActiveProviders}", ProxyProvider.ActiveProviders);
 
-      providerLock.Release();
+      // providerLock.Release();
     }
 
     public static void RemoveActiveProvider()
     {
-      providerLock.Wait();
-      ActiveProviders--;
+      // providerLock.Wait();
+      // ActiveProviders--;
       
-      providerLock.Release();
+      // providerLock.Release();
     }
 
     private static void AddFailedCount()
     {
-      providerLock.Wait();
-      FailedCount++;
-      providerLock.Release();
+      // providerLock.Wait();
+      // FailedCount++;
+      // providerLock.Release();
 
-      if (FailedCount > MaxFailedAttempts)
-      {
-        System.Diagnostics.Process.GetCurrentProcess().Kill();
-      }
+      // if (FailedCount > MaxFailedAttempts)
+      // {
+      //   System.Diagnostics.Process.GetCurrentProcess().Kill();
+      // }
     }
 
     private static void ResetFailedCount()
     {
-        providerLock.Wait();
-        FailedCount = 0;
-        providerLock.Release();
+        // providerLock.Wait();
+        // FailedCount = 0;
+        // providerLock.Release();
     }
   }
 }

@@ -130,11 +130,12 @@ namespace GroupClaes.OpenEdge.Connector.Business
         cancellationToken.ThrowIfCancellationRequested();
         await ExecuteProcedureOnCorrectProxyInterface(request, parameters, cancellationToken);
 
+        ProcedureResult procedureResult = null;
         if (parameters.ProcedureReturnValue != null
           && parameters.ProcedureReturnValue is string returnValue
           && !string.IsNullOrWhiteSpace(returnValue))
         {
-          ProcedureResult procedureResult = procedureParser.GetProcedureResult(returnValue);
+          procedureResult = procedureParser.GetProcedureResult(returnValue);
           if (procedureResult == null)
           {
             logger.LogError("Invalid ProcedureReturnValue provided: {ProcedureReturnValue}", returnValue);
@@ -145,7 +146,10 @@ namespace GroupClaes.OpenEdge.Connector.Business
             logger.LogInformation("Execution time for {Procedure} was {ExecutionTime}",
               request.Procedure, stopwatch.ElapsedMilliseconds);
 
-            return procedureParser.GetErrorResponse(500, request.Procedure,
+            return procedureParser.GetErrorResponse(
+              procedureResult.StatusCode > 0
+                ? procedureResult.StatusCode : 500,
+              request.Procedure,
               stopwatch.ElapsedMilliseconds, procedureResult);
           }
         }
@@ -158,8 +162,8 @@ namespace GroupClaes.OpenEdge.Connector.Business
 
         ProcedureResponse response = new ProcedureResponse
         {
-          Status = outputsDictionary.All(x => x.Value != null)
-          ? 200 : 204,
+          Status = (procedureResult != null && procedureResult.StatusCode > 0)
+            ? procedureResult.StatusCode : 200,
           Procedure = request.Procedure,
           OriginTime = stopwatch.ElapsedMilliseconds,
           Result = parameterService.GetParsedOutputs(outputsDictionary)
