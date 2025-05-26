@@ -7,7 +7,7 @@ docker_name="oe"
 
 cd "./GroupClaes.OpenEdge.Connector/"
 dotnet publish -c $configuration
-rm "./bin/$configuration/$version/publish/app2settings.Development.json"
+rm "./bin/$configuration/$version/publish/appsettings.Development.json"
 rm "./bin/$configuration/$version/publish/appsettings.json"
 
 cd ../
